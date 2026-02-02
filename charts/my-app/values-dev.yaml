@@ -6,7 +6,7 @@ celery:
 mlflow:
   replicas: 1
 flower:
-  enabled: true
+  enabled: false
   replicas: 1
 
 ingress:

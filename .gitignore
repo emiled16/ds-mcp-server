@@ -3,7 +3,7 @@
 .env.local
 .env.*.local
 
-# Terraform (infra/)
+# Terraform (terraform/)
 .terraform/
 *.tfstate
 *.tfstate.*

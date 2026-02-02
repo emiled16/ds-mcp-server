@@ -27,8 +27,8 @@
             "component": "charts/my-app",
             "release-type": "helm"
         },
-        "infra": {
-            "component": "infra",
+        "terraform": {
+            "component": "terraform",
             "release-type": "simple"
         }
     }
