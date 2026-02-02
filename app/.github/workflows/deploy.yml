@@ -1,0 +1,46 @@
+name: Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        type: choice
+        options:
+          - dev
+          - staging
+          - production
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log deployment info
+        run: |
+          echo "Deploying to: ${{ github.event.inputs.environment }}"
+          echo "Commit: ${{ github.sha }}"
+          echo "Branch: ${{ github.ref_name }}"
+
+      - name: Build images
+        run: |
+          docker compose -f docker/docker-compose.yaml build
+
+      # Add actual deployment steps here based on target environment
+      # Examples:
+      # - Push to container registry
+      # - Deploy to Kubernetes
+      # - Deploy to cloud service
+
+      - name: Deployment placeholder
+        run: |
+          echo "Deployment to ${{ github.event.inputs.environment }} would happen here"
+          echo "This is a placeholder for actual deployment logic"
+

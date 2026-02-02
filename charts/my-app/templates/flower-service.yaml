@@ -1,0 +1,17 @@
+
+{{- if .Values.flower.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "myapp.fullname" . }}-flower
+  namespace: {{ .Values.global.namespace }}
+spec:
+  type: ClusterIP
+  selector:
+    app: flower
+    release: {{ .Release.Name }}
+  ports:
+    - name: http
+      port: {{ .Values.flower.servicePort }}
+      targetPort: {{ .Values.flower.servicePort }}
+{{- end }}

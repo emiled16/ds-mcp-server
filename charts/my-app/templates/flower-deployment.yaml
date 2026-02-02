@@ -1,0 +1,30 @@
+
+{{- if .Values.flower.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "myapp.fullname" . }}-flower
+  namespace: {{ .Values.global.namespace }}
+spec:
+  replicas: {{ .Values.flower.replicas }}
+  selector:
+    matchLabels:
+      app: flower
+      release: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: flower
+        release: {{ .Release.Name }}
+    spec:
+      containers:
+        - name: flower
+          image: "{{ .Values.images.flower.repository }}:{{ .Values.images.flower.tag }}"
+          ports:
+            - containerPort: {{ .Values.flower.servicePort }}
+          env:
+            - name: REDIS_HOST
+              value: {{ .Values.env.redisHost | quote }}
+            - name: REDIS_PORT
+              value: {{ .Values.env.redisPort | quote }}
+{{- end }}

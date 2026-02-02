@@ -1,0 +1,16 @@
+
+mcp:
+  replicas: 1
+celery:
+  replicas: 1
+mlflow:
+  replicas: 1
+flower:
+  enabled: true
+  replicas: 1
+
+ingress:
+  enabled: false
+
+externalSecrets:
+  projectId: "YOUR_PROJECT_ID"

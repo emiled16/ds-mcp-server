@@ -1,0 +1,45 @@
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "myapp.fullname" . }}-mlflow
+  namespace: {{ .Values.global.namespace }}
+spec:
+  replicas: {{ .Values.mlflow.replicas }}
+  selector:
+    matchLabels:
+      app: mlflow
+      release: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: mlflow
+        release: {{ .Release.Name }}
+    spec:
+      containers:
+        - name: mlflow
+          image: "{{ .Values.images.mlflow.repository }}:{{ .Values.images.mlflow.tag }}"
+          ports:
+            - containerPort: {{ .Values.mlflow.servicePort }}
+          env:
+            - name: MLFLOW_BACKEND_STORE_URI
+              value: "postgresql://{{ .Values.env.postgresUser }}:$(POSTGRES_PASSWORD)@{{ .Values.env.postgresHost }}:{{ .Values.env.postgresPort }}/{{ .Values.env.postgresDb }}"
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: POSTGRES_PASSWORD
+            - name: MLFLOW_ARTIFACT_ROOT
+              value: "gs://{{ .Values.env.gcsArtifactsBucket }}/mlflow"
+          readinessProbe:
+            httpGet:
+              path: /
+              port: {{ .Values.mlflow.servicePort }}
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /
+              port: {{ .Values.mlflow.servicePort }}
+            initialDelaySeconds: 30
+            periodSeconds: 20

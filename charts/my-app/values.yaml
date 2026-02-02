@@ -1,0 +1,73 @@
+
+global:
+  namespace: app
+
+images:
+  mcp:
+    repository: "REPLACE_WITH_ARTIFACT_REGISTRY/mcp"
+    tag: "latest"
+  celery:
+    repository: "REPLACE_WITH_ARTIFACT_REGISTRY/celery"
+    tag: "latest"
+  mlflow:
+    repository: "REPLACE_WITH_ARTIFACT_REGISTRY/mlflow"
+    tag: "latest"
+  flower:
+    repository: "REPLACE_WITH_ARTIFACT_REGISTRY/flower"
+    tag: "latest"
+
+mcp:
+  replicas: 1
+  servicePort: 8001
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+
+celery:
+  replicas: 1
+  resources:
+    requests:
+      cpu: 500m
+      memory: 1Gi
+
+mlflow:
+  replicas: 1
+  servicePort: 5000
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+
+flower:
+  enabled: true
+  replicas: 1
+  servicePort: 5555
+
+ingress:
+  enabled: false
+  className: "gce"
+  host: "example.com"
+  paths:
+    - path: /
+      pathType: Prefix
+
+externalSecrets:
+  enabled: true
+  secretStoreName: "gcp-secret-store"
+  projectId: "REPLACE_WITH_PROJECT_ID"
+
+secrets:
+  # These are names of secrets in Secret Manager
+  appSecretKey: "app-secret-key"
+  postgresPassword: "postgres-password"
+
+env:
+  # Non-secret config
+  redisHost: "REPLACE_WITH_REDIS_HOST"
+  redisPort: "6379"
+  postgresHost: "REPLACE_WITH_CLOUDSQL_PRIVATE_IP"
+  postgresPort: "5432"
+  postgresDb: "mlflow"
+  postgresUser: "appuser"
+  gcsArtifactsBucket: "REPLACE_WITH_BUCKET"

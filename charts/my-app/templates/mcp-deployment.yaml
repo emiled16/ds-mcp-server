@@ -1,0 +1,61 @@
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "myapp.fullname" . }}-mcp
+  namespace: {{ .Values.global.namespace }}
+spec:
+  replicas: {{ .Values.mcp.replicas }}
+  selector:
+    matchLabels:
+      app: mcp
+      release: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: mcp
+        release: {{ .Release.Name }}
+    spec:
+      containers:
+        - name: mcp
+          image: "{{ .Values.images.mcp.repository }}:{{ .Values.images.mcp.tag }}"
+          ports:
+            - containerPort: {{ .Values.mcp.servicePort }}
+          env:
+            - name: REDIS_HOST
+              value: {{ .Values.env.redisHost | quote }}
+            - name: REDIS_PORT
+              value: {{ .Values.env.redisPort | quote }}
+            - name: GCS_ARTIFACTS_BUCKET
+              value: {{ .Values.env.gcsArtifactsBucket | quote }}
+            - name: POSTGRES_HOST
+              value: {{ .Values.env.postgresHost | quote }}
+            - name: POSTGRES_PORT
+              value: {{ .Values.env.postgresPort | quote }}
+            - name: POSTGRES_DB
+              value: {{ .Values.env.postgresDb | quote }}
+            - name: POSTGRES_USER
+              value: {{ .Values.env.postgresUser | quote }}
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: POSTGRES_PASSWORD
+            - name: POSTGRES_SCHEMA
+              value: {{ .Values.env.postgresSchema | default "app" | quote }}
+          resources:
+            requests:
+              cpu: {{ .Values.mcp.resources.requests.cpu | quote }}
+              memory: {{ .Values.mcp.resources.requests.memory | quote }}
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: {{ .Values.mcp.servicePort }}
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: {{ .Values.mcp.servicePort }}
+            initialDelaySeconds: 30
+            periodSeconds: 20

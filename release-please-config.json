@@ -1,0 +1,35 @@
+{
+    "release-type": "python",
+    "bump-minor-pre-major": true,
+    "bump-patch-for-minor-pre-major": true,
+    "include-component-in-tag": true,
+    "separate-pull-requests": true,
+    "sequential-calls": true,
+    "changelog-sections": [
+        { "type": "feat", "section": "Features" },
+        { "type": "fix", "section": "Bug Fixes" },
+        { "type": "perf", "section": "Performance Improvements" },
+        { "type": "revert", "section": "Reverts" },
+        { "type": "docs", "section": "Documentation", "hidden": false },
+        { "type": "style", "section": "Styles", "hidden": false },
+        { "type": "chore", "section": "Miscellaneous Chores", "hidden": true },
+        { "type": "refactor", "section": "Code Refactoring", "hidden": false },
+        { "type": "test", "section": "Tests", "hidden": false },
+        { "type": "build", "section": "Build System", "hidden": true },
+        { "type": "ci", "section": "Continuous Integration", "hidden": false }
+    ],
+    "packages": {
+        "app": {
+            "component": "app",
+            "release-type": "python"
+        },
+        "charts/my-app": {
+            "component": "charts/my-app",
+            "release-type": "helm"
+        },
+        "infra": {
+            "component": "infra",
+            "release-type": "simple"
+        }
+    }
+}

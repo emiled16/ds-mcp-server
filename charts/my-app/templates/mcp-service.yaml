@@ -1,0 +1,15 @@
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "myapp.fullname" . }}-mcp
+  namespace: {{ .Values.global.namespace }}
+spec:
+  type: ClusterIP
+  selector:
+    app: mcp
+    release: {{ .Release.Name }}
+  ports:
+    - name: http
+      port: {{ .Values.mcp.servicePort }}
+      targetPort: {{ .Values.mcp.servicePort }}
