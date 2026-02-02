@@ -1,0 +1,53 @@
+name: docker
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "app/**"
+  workflow_dispatch:
+
+env:
+  IMAGE_TAG: ${{ github.sha }}
+  # Set in repo: Settings → Secrets and variables → Actions → Variables
+  WORKLOAD_IDENTITY_PROVIDER: ${{ vars.WORKLOAD_IDENTITY_PROVIDER }}
+  SERVICE_ACCOUNT: ${{ vars.SERVICE_ACCOUNT }}
+  ARTIFACT_REGISTRY_REPO: ${{ vars.ARTIFACT_REGISTRY_REPO }}
+
+jobs:
+  build-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write  # Required for OIDC
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ env.WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ env.SERVICE_ACCOUNT }}
+
+      - uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker
+        run: |
+          HOST="$(echo "${{ env.ARTIFACT_REGISTRY_REPO }}" | cut -d/ -f1)"
+          gcloud auth configure-docker "$HOST" --quiet
+
+      - name: Build and push MCP/Celery/Flower image
+        run: |
+          IMAGE="${{ env.ARTIFACT_REGISTRY_REPO }}/mcp"
+          docker build -t "${IMAGE}:${IMAGE_TAG}" -f app/docker/Dockerfile.mcp app/
+          docker push "${IMAGE}:${IMAGE_TAG}"
+          docker tag "${IMAGE}:${IMAGE_TAG}" "${IMAGE}:latest"
+          docker push "${IMAGE}:latest"
+
+      - name: Build and push MLflow image
+        run: |
+          IMAGE="${{ env.ARTIFACT_REGISTRY_REPO }}/mlflow"
+          docker build -t "${IMAGE}:${IMAGE_TAG}" -f app/docker/Dockerfile.mlflow app/
+          docker push "${IMAGE}:${IMAGE_TAG}"
+          docker tag "${IMAGE}:${IMAGE_TAG}" "${IMAGE}:latest"
+          docker push "${IMAGE}:latest"
