@@ -1,0 +1,12 @@
+# Copy to terraform.tfvars and fill in your values.
+# terraform.tfvars is gitignored to avoid committing secrets.
+
+project_id = "your-gcp-project-id"
+region     = "us-central1"
+zone       = "us-central1-a"
+
+# Optional overrides (see variables.tf for defaults)
+# network_name = "app-vpc"
+# subnet_cidr   = "10.10.0.0/16"
+# gke_min_nodes = 1
+# cloudsql_tier = "db-f1-micro"
