@@ -2,8 +2,8 @@ from typing import Literal
 
 import pandas as pd
 from pydantic import Field
-from snowflake.snowpark import DataFrame as SnowparkDataFrame
 
+from src.data_science.compat import SnowparkDataFrame
 from src.data_science.ds_core.atomic_functions.pandas.feature_cyclical_time_periods import (
     cyclical_time_transform as pandas_cyclical_time_transform,
 )

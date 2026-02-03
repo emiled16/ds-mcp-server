@@ -4,12 +4,11 @@ from typing import Literal
 import holidays
 import numpy as np
 import pandas as pd
-from loguru import logger
 from pydantic import Field
-from snowflake.snowpark import DataFrame as SnowparkDataFrame
-from snowflake.snowpark.context import get_active_session
 
+from src.data_science.compat import SnowparkDataFrame
 from src.data_science.ds_core.definitions.orchestration.transformation import BaseParameter, BaseTransformation
+from src.data_science.snowflake_optional import get_active_session, require_snowflake
 
 # - Standard time series features:
 #   - [ ] day of the week
@@ -35,6 +34,7 @@ def add_basic_calendar_features(
     holidays_countries: list[str],
     table_name: str = "MAXA_DEV.DATA_MART.DIM_CALENDAR",
 ) -> pd.DataFrame:
+    require_snowflake()
     session = get_active_session()
     dim_calendar = (
         session.table(table_name).to_pandas().rename(columns=str.lower)[["date_day", "is_last_work_day_of_month"]]

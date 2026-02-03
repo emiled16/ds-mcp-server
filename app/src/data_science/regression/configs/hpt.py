@@ -5,7 +5,7 @@ import optuna
 import pandas as pd
 from optuna import Study, Trial
 from pydantic import BaseModel, Field
-from snowflake import snowpark
+from src.data_science.snowflake_optional import snowpark
 
 from src.data_science.ds_core.definitions.orchestration.pipeline import Pipeline
 from src.data_science.ds_core.definitions.splitters import Splitter

@@ -154,7 +154,7 @@ async def plot_feature_importance(
         plt.tight_layout()
 
         # Save plot
-        object_key, plot_url = save_plot_to_minio(
+        object_key, plot_url = await save_plot_to_minio(
             fig, f"feature_importance_{model_identifier.replace(':', '_').replace('/', '_')}"
         )
         close_figure(fig)

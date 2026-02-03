@@ -9,18 +9,19 @@ import matplotlib
 import matplotlib.pyplot as plt
 from loguru import logger
 
+from src.storage.backends.dispatcher import get_object_store
+
 # Use non-interactive backend
 matplotlib.use("Agg")
 
-# MinIO configuration
-MINIO_ENDPOINT = os.getenv("MINIO_ENDPOINT", "localhost:9000")
-MINIO_ACCESS_KEY = os.getenv("MINIO_ACCESS_KEY", "minioadmin")
-MINIO_SECRET_KEY = os.getenv("MINIO_SECRET_KEY", "minioadmin")
-MINIO_BUCKET = os.getenv("MINIO_BUCKET", "mlflow")
+# Object store bucket (used for both MinIO and GCS backends)
+OBJECT_STORE_BUCKET = os.getenv("OBJECT_STORE_BUCKET") or os.getenv("MINIO_BUCKET", "mlflow")
 
 
-def save_plot_to_minio(fig: plt.Figure, plot_name: str) -> tuple[str, str]:
-    """Save a matplotlib figure to MinIO and return the URL and object key.
+async def save_plot_to_minio(fig: plt.Figure, plot_name: str) -> tuple[str, str]:
+    """Save a matplotlib figure to the configured object store (MinIO or GCS) and return the object key and URL.
+
+    Uses OBJECT_STORE_BACKEND (minio | gcs). Bucket from OBJECT_STORE_BUCKET or MINIO_BUCKET.
 
     Args:
         fig: Matplotlib figure to save
@@ -30,47 +31,30 @@ def save_plot_to_minio(fig: plt.Figure, plot_name: str) -> tuple[str, str]:
         Tuple of (object_key, url)
     """
     try:
-        from minio import Minio
-
-        # Create MinIO client
-        client = Minio(
-            MINIO_ENDPOINT,
-            access_key=MINIO_ACCESS_KEY,
-            secret_key=MINIO_SECRET_KEY,
-            secure=False,
-        )
-
-        # Ensure bucket exists
-        if not client.bucket_exists(MINIO_BUCKET):
-            client.make_bucket(MINIO_BUCKET)
-
-        # Generate unique filename
+        store = get_object_store()
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         object_name = f"plots/{plot_name}_{timestamp}.png"
 
-        # Save figure to bytes
         buf = io.BytesIO()
         fig.savefig(buf, format="png", dpi=100, bbox_inches="tight")
         buf.seek(0)
+        data = buf.getvalue()
 
-        # Upload to MinIO
-        client.put_object(
-            MINIO_BUCKET,
-            object_name,
-            buf,
-            length=buf.getbuffer().nbytes,
-            content_type="image/png",
-        )
+        await store.put(OBJECT_STORE_BUCKET, object_name, data)
 
-        # Generate URL
-        url = f"http://{MINIO_ENDPOINT}/{MINIO_BUCKET}/{object_name}"
+        backend = os.getenv("OBJECT_STORE_BACKEND", "minio").lower()
+        if backend == "minio":
+            endpoint = os.getenv("MINIO_ENDPOINT", "localhost:9000")
+            url = f"http://{endpoint}/{OBJECT_STORE_BUCKET}/{object_name}"
+        else:
+            gcs_bucket = os.getenv("GCS_ARTIFACTS_BUCKET", "")
+            url = f"gs://{gcs_bucket}/{OBJECT_STORE_BUCKET}/{object_name}"
 
-        logger.info(f"Saved plot to MinIO: {url}")
+        logger.info(f"Saved plot to object store: {url}")
         return object_name, url
 
     except Exception as e:
-        logger.exception(f"Error saving plot to MinIO: {e}")
-        # Fallback: return base64 encoded image
+        logger.exception(f"Error saving plot to object store: {e}")
         buf = io.BytesIO()
         fig.savefig(buf, format="png", dpi=100, bbox_inches="tight")
         buf.seek(0)

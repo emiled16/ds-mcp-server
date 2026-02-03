@@ -211,7 +211,7 @@ async def plot_partial_dependence(
         plt.tight_layout()
 
         # Save plot
-        plot_url = await save_plot_to_minio(fig, "partial_dependence")
+        _, plot_url = await save_plot_to_minio(fig, "partial_dependence")
         plt.close(fig)
 
         # Extract PDP data for each feature

@@ -1,14 +1,12 @@
 import json
 import uuid
-from typing import Any, List, Literal, Optional, Tuple, Union
+from typing import Annotated, Any, Literal
 
 import requests
 from pydantic import BaseModel, Field
-from snowflake.snowpark.context import get_active_session
-from typing_extensions import Annotated
-
 from src.data_science.snowflake.cortex.cortex_semantic_model import CortexSemanticModel
 from src.data_science.snowflake.session import is_inside_snowflake
+from src.data_science.snowflake_optional import get_active_session, require_snowflake
 
 # Cortex Analyst REST API
 # => https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-analyst/rest-api#request-body
@@ -26,34 +24,35 @@ ExecutableVerifiedQuery = str
 class CortexAnalystMessageSql(BaseModel):
     type: Literal["sql"] = "sql"
     statement: ExecutableVerifiedQuery
-    confidence: Optional[Any] = None
+    confidence: Any | None = None
 
 
 class CortexAnalystMessageSuggestion(BaseModel):
     type: Literal["suggestions"] = "suggestions"
-    suggestions: List[str]
+    suggestions: list[str]
 
 
 CortexAnalystMessageContent = Annotated[
-    Union[CortexAnalystMessageText, CortexAnalystMessageSql, CortexAnalystMessageSuggestion],
+    CortexAnalystMessageText | CortexAnalystMessageSql | CortexAnalystMessageSuggestion,
     Field(discriminator="type"),
 ]
 
 
 class CortexAnalystMessage(BaseModel):
     role: str  # user, analyst, system
-    content: List[CortexAnalystMessageContent]
+    content: list[CortexAnalystMessageContent]
 
     @staticmethod
     def user_prompt(text: str) -> "CortexAnalystMessage":
         return CortexAnalystMessage(role="user", content=[CortexAnalystMessageText(text=text)])
 
 
-def cortex_analyst(semantic_model: CortexSemanticModel, messages: List[CortexAnalystMessage]) -> CortexAnalystMessage:
+def cortex_analyst(semantic_model: CortexSemanticModel, messages: list[CortexAnalystMessage]) -> CortexAnalystMessage:
     """Calls the Cortex Analyst API.
 
     Ref: https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-analyst/rest-api
     """
+    require_snowflake()
     request = CortexAnalystRequest(messages=messages, semantic_model=semantic_model.to_yaml())
 
     cortex_analyst_api = _cortex_analyst_native_app_api if is_inside_snowflake() else _cortex_analyst_rest_api
@@ -69,9 +68,9 @@ def cortex_analyst(semantic_model: CortexSemanticModel, messages: List[CortexAna
 
 
 class CortexAnalystRequest(BaseModel):
-    messages: List[CortexAnalystMessage]
-    semantic_model_file: Optional[str] = None
-    semantic_model: Optional[str] = None
+    messages: list[CortexAnalystMessage]
+    semantic_model_file: str | None = None
+    semantic_model: str | None = None
 
 
 class CortexAnalystResponse(BaseModel):
@@ -79,9 +78,14 @@ class CortexAnalystResponse(BaseModel):
     request_id: str
 
 
-def _cortex_analyst_native_app_api(request: CortexAnalystRequest) -> Tuple[str, int, dict]:
+def _cortex_analyst_native_app_api(request: CortexAnalystRequest) -> tuple[str, int, dict]:
     """Cortex Analyst API from Streamlit in Snowflake."""
-    import _snowflake  # type: ignore
+    try:
+        import _snowflake  # type: ignore
+    except ImportError as e:
+        raise ImportError(
+            "Cortex Analyst native app API requires running inside Snowflake (e.g. Streamlit in Snowflake)."
+        ) from e
 
     request_body = request.model_dump(mode="json")
     resp = _snowflake.send_snow_api_request("POST", "/api/v2/cortex/analyst/message", {}, {}, request_body, {}, 30000)
@@ -92,7 +96,7 @@ def _cortex_analyst_native_app_api(request: CortexAnalystRequest) -> Tuple[str, 
     return request_id, status_code, response_json
 
 
-def _cortex_analyst_rest_api(request: CortexAnalystRequest) -> Tuple[str, int, dict]:
+def _cortex_analyst_rest_api(request: CortexAnalystRequest) -> tuple[str, int, dict]:
     """Ref: https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-analyst/rest-api"""
     session = get_active_session()
     if not (rest_connection := session.connection.rest):

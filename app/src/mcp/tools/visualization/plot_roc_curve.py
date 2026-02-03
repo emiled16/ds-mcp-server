@@ -204,7 +204,7 @@ async def plot_roc_curve(
         plt.tight_layout()
 
         # Save plot
-        object_key, plot_url = save_plot_to_minio(
+        object_key, plot_url = await save_plot_to_minio(
             fig, f"roc_curve_{model_identifier.replace(':', '_').replace('/', '_')}"
         )
         close_figure(fig)

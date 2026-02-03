@@ -226,7 +226,7 @@ async def plot_distribution(
         plt.tight_layout()
 
         # Save plot
-        object_key, plot_url = save_plot_to_minio(fig, f"distribution_{column}")
+        object_key, plot_url = await save_plot_to_minio(fig, f"distribution_{column}")
         close_figure(fig)
 
         # Generate summary

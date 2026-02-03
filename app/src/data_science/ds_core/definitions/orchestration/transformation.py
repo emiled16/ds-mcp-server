@@ -1,11 +1,11 @@
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Optional, Union
+from typing import Any
 
 import pandas as pd
 from loguru import logger
 from pydantic import Field
-from snowflake.snowpark import DataFrame as SnowparkDataFrame
 
+from src.data_science.compat import SnowparkDataFrame
 from src.data_science.ds_core.definitions.orchestration.io import (
     BaseInput,
     BaseOutput,
@@ -47,11 +47,11 @@ class BaseTransformation(BaseStep, ABC):
     """
 
     name: str
-    display_name: Optional[str] = None
+    display_name: str | None = None
     description: str
-    parameters: Optional[List[BaseParameter]] = Field(default=None)
-    inputs: List[BaseInput] = Field(default=[BaseInput()])
-    outputs: List[BaseOutput] = Field(default=[BaseOutput()])
+    parameters: list[BaseParameter] | None = Field(default=None)
+    inputs: list[BaseInput] = Field(default=[BaseInput()])
+    outputs: list[BaseOutput] = Field(default=[BaseOutput()])
     is_fitted: bool = False
 
     def model_dump(self) -> dict[str, Any]:
@@ -80,7 +80,7 @@ class BaseTransformation(BaseStep, ABC):
         return name.default
 
     @classmethod
-    def get_parameters(cls) -> Dict[str, str]:
+    def get_parameters(cls) -> dict[str, str]:
         res = {}
         parameters = cls.model_fields.get("parameters")
         if parameters is None:
@@ -91,7 +91,7 @@ class BaseTransformation(BaseStep, ABC):
 
     def fit(
         self,
-        **inputs: Union[pd.DataFrame, SnowparkDataFrame],
+        **inputs: pd.DataFrame | SnowparkDataFrame,
     ) -> "BaseTransformation":
         self.validate_inputs(**inputs)
 
@@ -109,12 +109,12 @@ class BaseTransformation(BaseStep, ABC):
 
     def transform(
         self,
-        **inputs: Union[pd.DataFrame, SnowparkDataFrame],
-    ) -> Union[pd.DataFrame, SnowparkDataFrame]:
+        **inputs: pd.DataFrame | SnowparkDataFrame,
+    ) -> pd.DataFrame | SnowparkDataFrame:
         self.validate_inputs(**inputs)
 
         engine = self._find_engine(inputs)
-        logger.info(f"=" * 30)
+        logger.info("=" * 30)
         logger.info(f"Running the transform: {self.name}")
         logger.info("Shapes of inputs before transformation:")
         for k, v in inputs.items():
@@ -137,8 +137,8 @@ class BaseTransformation(BaseStep, ABC):
 
     def fit_transform(
         self,
-        **inputs: Union[pd.DataFrame, SnowparkDataFrame],
-    ) -> Union[pd.DataFrame, SnowparkDataFrame]:
+        **inputs: pd.DataFrame | SnowparkDataFrame,
+    ) -> pd.DataFrame | SnowparkDataFrame:
         return self.fit(**inputs).transform(**inputs)
 
     @abstractmethod

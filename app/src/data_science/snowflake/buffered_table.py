@@ -1,12 +1,11 @@
 import atexit
 import threading
 from types import TracebackType
-from typing import Any, Dict, List, Optional, Type
-
-from snowflake.snowpark import Session
+from typing import Any
 
 from src.data_science.snowflake.constants import SNOWFLAKE_INSERT_MAX_NB_ROWS
 from src.data_science.snowflake.data_types import VARIANT_TYPES, DataType, serialize_variant
+from src.data_science.snowflake_optional import Session, require_snowflake
 
 
 class BufferedTable:
@@ -16,20 +15,21 @@ class BufferedTable:
         self,
         session: Session,
         table_path: str,
-        columns: Dict[str, DataType],
+        columns: dict[str, DataType],
         capacity: int = SNOWFLAKE_INSERT_MAX_NB_ROWS,
     ) -> None:
+        require_snowflake()
         self._session = session
         self._table_path = table_path
         self._columns = columns
 
         self._capacity = capacity
-        self._buffer: List[Dict[str, Any]] = []
+        self._buffer: list[dict[str, Any]] = []
         self._lock = threading.RLock()
 
         atexit.register(self.flush)  # automatically flush when stopping the app
 
-    def add(self, row: Dict[str, Any]) -> "BufferedTable":
+    def add(self, row: dict[str, Any]) -> "BufferedTable":
         # Inspired by logging.BufferingHandler
         # => https://github.com/python/cpython/blob/3.12/Lib/logging/handlers.py#L1307-L1325
         with self._lock:
@@ -91,8 +91,8 @@ class BufferedTable:
 
     def __exit__(
         self,
-        exc_type: Optional[Type[BaseException]] = None,
-        exc_val: Optional[BaseException] = None,
-        exc_tb: Optional[TracebackType] = None,
+        exc_type: type[BaseException] | None = None,
+        exc_val: BaseException | None = None,
+        exc_tb: TracebackType | None = None,
     ) -> None:
         self.flush()

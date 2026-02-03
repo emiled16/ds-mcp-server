@@ -4,15 +4,15 @@ from tempfile import TemporaryDirectory
 
 import pandas as pd
 from pandas.core.dtypes.common import is_datetime64_any_dtype
-from snowflake.snowpark import Session
-
 from src.data_science.snowflake.data_types import VARIANT_TYPES
 from src.data_science.snowflake.identifiers import TablePath, identifier_parts
+from src.data_science.snowflake_optional import Session, require_snowflake
 
 logger = logging.getLogger(__name__)
 
 
 def write_pandas(session: Session, table_path: TablePath, df: pd.DataFrame) -> None:
+    require_snowflake()
     """Insert rows in the given data frame to the given table.
 
     This is a re-implementation of the `write_pandas` function that supports variants, dates and binaries.

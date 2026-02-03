@@ -1,7 +1,7 @@
 from typing import Optional
 
 from loguru import logger
-from snowflake.snowpark.context import get_active_session
+from src.data_science.snowflake_optional import get_active_session, require_snowflake
 
 
 def init_monitoring(
@@ -21,6 +21,7 @@ def init_monitoring(
     refresh_interval: str = "1 min",
     aggregation_window: str = "1 day",
 ):
+    require_snowflake()
     if database_name is not None:
         get_active_session().use_database(database_name)
     if schema_name is not None:
@@ -50,6 +51,7 @@ def init_monitoring(
 
 
 def delete_monitoring(monitoring_pipeline_name: str):
+    require_snowflake()
     query = f"DROP MODEL MONITOR {monitoring_pipeline_name};"
     get_active_session().sql(query).collect()
     logger.info(f"Monitoring pipeline {monitoring_pipeline_name} deleted successfully")

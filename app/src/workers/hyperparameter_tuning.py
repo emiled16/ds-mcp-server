@@ -66,10 +66,10 @@ def run_hpt_trial(
     # Suggest hyperparameters
     hyperparams = create_optuna_suggest_from_space(trial, param_space)
 
-    # Prepare data - Snowflake ML models expect DataFrame with all columns
+    # Prepare data - models expect DataFrame with all columns
     train_df, test_df = train_test_split(df, test_size=test_size, random_state=42)
 
-    # Create and train model (Snowflake ML style - pass DataFrame)
+    # Create and train model (sklearn wrapper - pass DataFrame)
     model = create_model(model_type, hyperparams, feature_columns, target_column)
     model.fit(train_df)
 

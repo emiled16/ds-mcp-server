@@ -1,9 +1,9 @@
-from typing import Literal, Union
+from typing import Literal
 
 import pandas as pd
 from pydantic import Field
-from snowflake.snowpark import DataFrame as SnowparkDataFrame
 
+from src.data_science.compat import SnowparkDataFrame
 from src.data_science.ds_core.atomic_functions.pandas.drop_outliers import (
     drop_rows_out_of_bounds as drop_rows_out_of_bounds_pandas,
 )
@@ -32,7 +32,7 @@ class DropRowsOutOfBounds(BaseTransformation):
     description: str = "Drop rows containing values outside specified bounds from a dataframe"
     parameters: DropRowsOutOfBoundsParameters
 
-    def _fit(self, _df: Union[pd.DataFrame, SnowparkDataFrame]) -> "DropRowsOutOfBounds":
+    def _fit(self, _df: pd.DataFrame | SnowparkDataFrame) -> "DropRowsOutOfBounds":
         return self
 
     def _fit_snowpark(self, df: SnowparkDataFrame) -> "DropRowsOutOfBounds":

@@ -1,9 +1,9 @@
-from typing import Literal, Union
+from typing import Literal
 
 import pandas as pd
 from pydantic import Field
-from snowflake.snowpark import DataFrame as SnowparkDataFrame
 
+from src.data_science.compat import SnowparkDataFrame
 from src.data_science.ds_core.atomic_functions.pandas.drop_outliers import drop_rare_labels as drop_rare_labels_pandas
 from src.data_science.ds_core.definitions.orchestration.transformation import BaseParameter, BaseTransformation
 
@@ -29,7 +29,7 @@ class DropRareLabels(BaseTransformation):
     description: str = "Drop rows containing rare categorical labels from a dataframe"
     parameters: DropRareLabelsParameters
 
-    def _fit(self, _df: Union[pd.DataFrame, SnowparkDataFrame]) -> "DropRareLabels":
+    def _fit(self, _df: pd.DataFrame | SnowparkDataFrame) -> "DropRareLabels":
         return self
 
     def _fit_snowpark(self, df: SnowparkDataFrame) -> "DropRareLabels":

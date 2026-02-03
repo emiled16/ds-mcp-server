@@ -3,7 +3,7 @@ from typing import Literal, Optional, Union
 
 import pandas as pd
 from pydantic import BaseModel, ConfigDict, Field
-from snowflake.snowpark import DataFrame as SnowparkDataFrame
+from src.data_science.compat import SnowparkDataFrame
 
 from src.data_science.ds_core.definitions.orchestration.io import BaseInput, BaseOutput, BaseParameter
 

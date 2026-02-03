@@ -2,8 +2,8 @@ from typing import Literal
 
 import pandas as pd
 from pydantic import Field
-from snowflake.snowpark import DataFrame as SnowparkDataFrame
 
+from src.data_science.compat import SnowparkDataFrame
 from src.data_science.ds_core.atomic_functions.pandas.maths_transform import (
     polynomial_features as pandas_polynomial_features,
 )

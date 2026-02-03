@@ -1,61 +1,70 @@
+"""PostgreSQL database client using SQLAlchemy and pandas."""
+
 import datetime
+import shutil
 from collections.abc import Hashable
-from functools import reduce
 from pathlib import Path
 from typing import Any, Dict, List, Literal, Type, TypeVar
 
 import pandas as pd
-import snowflake.snowpark.functions as f
 from loguru import logger
 from pydantic import BaseModel
-from snowflake.snowpark import DataFrame, Session, Window
+from sqlalchemy import Engine, insert, text
 
 from src.data_science.database.base import Base
-from src.data_science.snowflake.buffered_table import BufferedTable
-from src.data_science.treasury_forecasting.constants import STAGE_PATH
 
 T = TypeVar("T", bound=Base)
 
 
 def table_path_from_orm(table_orm: Type[T]) -> str:
-    return f"{table_orm.__table__.schema}.{table_orm.__table__.name}"
+    """Return schema-qualified table name for the ORM class."""
+    t = table_orm.__table__
+    return f'"{t.schema}"."{t.name}"' if t.schema else f'"{t.name}"'
 
 
 class Qualify(BaseModel):
+    """Row selection by window function (e.g. latest per partition)."""
+
     fn: Literal["row_number"] = "row_number"
     partition_by: list[str] | None = None
     order_by: list[str] | None = None
     asc: bool = True
     target: int | None = None
 
-    def qualify(self, table: DataFrame) -> DataFrame:
-        window = Window
-        if self.partition_by:
-            window = window.partition_by(*self.partition_by)
-        if self.order_by:
-            window = window.order_by(
-                [f.col(order_by).asc() if self.asc else f.col(order_by).desc() for order_by in self.order_by],
-            )
-
-        table = table.with_column("rn", f.row_number().over(window).alias("rn"))
-
-        return table.filter(f.col("rn") == self.target).drop("rn")
+    def to_sql_subquery(self, table_path: str, where_clause: str = "") -> str:
+        """Return SQL for selecting rows with ROW_NUMBER() applied."""
+        order_cols = self.order_by or ["1"]
+        order_dir = "ASC" if self.asc else "DESC"
+        order_expr = ", ".join(f'"{c}" {order_dir}' for c in order_cols)
+        partition = f"PARTITION BY {', '.join(f'\"{c}\"' for c in self.partition_by)}" if self.partition_by else ""
+        over = f"OVER ({partition} ORDER BY {order_expr})"
+        where = f" WHERE {where_clause}" if where_clause else ""
+        return f"""
+            SELECT * FROM (
+                SELECT *, ROW_NUMBER() {over} AS rn
+                FROM {table_path}{where}
+            ) sub
+            WHERE rn = {self.target or 1}
+        """
 
 
 class DBClient:
-    def __init__(self, session: Session, files_stage: str | None = STAGE_PATH):
-        self.session = session
-        self.files_stage = files_stage
+    """PostgreSQL client for experiment/run/feature-store tables and file storage."""
+
+    def __init__(
+        self,
+        engine: Engine,
+        file_storage_path: Path | str | None = None,
+    ) -> None:
+        self._engine = engine
+        self._file_storage_path = Path(file_storage_path) if file_storage_path else None
 
     def insert_records(self, table_orm: Type[T], records: List[Dict[str, Any]]) -> None:
-        if len(records) == 0:
+        if not records:
             return
-        columns = {k: categorize_column(v) for k, v in records[0].items()}
-
-        buffered_table = BufferedTable(self.session, table_path_from_orm(table_orm), columns)
-        with buffered_table:
-            for record in records:
-                buffered_table.add(record)
+        table = table_orm.__table__
+        with self._engine.begin() as conn:
+            conn.execute(insert(table), records)
 
     def fetch_records(
         self,
@@ -63,81 +72,82 @@ class DBClient:
         filters: dict[str, Any],
         qualify: Qualify | None = None,
     ) -> list[dict[Hashable, Any]]:
-        table = self.session.table(table_path_from_orm(table_orm))
-        if filters:
-            table = table.filter(reduce(lambda x, y: x & y, [f.col(key) == value for key, value in filters.items()]))
-        if qualify:
-            table = qualify.qualify(table)
-        return table.to_pandas().rename(columns=str.lower).to_dict(orient="records")
+        table_path = table_path_from_orm(table_orm)
+        where_parts = [f'"{k}" = :{k}' for k in filters.keys()]
+        where_clause = " AND ".join(where_parts) if where_parts else ""
+
+        if qualify is not None:
+            sql = qualify.to_sql_subquery(table_path, where_clause)
+            df = pd.read_sql(text(sql), self._engine, params=filters)
+        else:
+            base_sql = f'SELECT * FROM {table_path}'
+            if where_clause:
+                base_sql += f" WHERE {where_clause}"
+            df = pd.read_sql(text(base_sql), self._engine, params=filters)
+
+        return df.rename(columns=str.lower).to_dict(orient="records")
 
     def append_table(self, table_orm: Type[T], df: pd.DataFrame) -> None:
         if len(df) == 0:
             return
-
-        table_path = f"{table_orm.__table__.schema}.{table_orm.__table__.name}"
-        self.session.create_dataframe(df.rename(columns=str.upper)).write.mode("append").save_as_table(
-            table_path, column_order="name"
-        )
-        # write_pandas(session=self.session, df=df.rename(columns=str.lower), table_path=table_path)
+        table = table_orm.__table__
+        schema = table.schema or "public"
+        name = table.name
+        df = df.rename(columns=str.lower)
+        with self._engine.begin() as conn:
+            df.to_sql(name, conn, schema=schema, if_exists="append", index=False, method="multi")
 
     def fetch_table(self, table_path: str, filters: dict[str, Any] | None = None) -> pd.DataFrame:
-        """
-        Example:
-        filters = {
-            "feature_store_id": "123",
-            "workday_of_month_reverse": 1,
-        }
-        table = self.fetch_table(table_path, filters)
-        table = table.assign(data=lambda _d: _d["data"].apply(json.loads))
-        """
+        """Fetch a table as a DataFrame, optionally filtered.
 
-        # TODO: manage more complex filters (like in_list, etc.)
-        table = self.session.table(table_path)
+        table_path: schema-qualified name, e.g. forecasting_experiment_data.dim_runs
+                   or quoted "schema"."name" from table_path_from_orm()
+        """
+        if table_path.startswith('"'):
+            full_name = table_path
+        elif "." in table_path:
+            schema, name = table_path.split(".", 1)
+            full_name = f'"{schema}"."{name}"'
+        else:
+            full_name = f'"{table_path}"'
+        sql = f"SELECT * FROM {full_name}"
+        params = {}
         if filters:
-            table = table.filter(reduce(lambda x, y: x & y, [f.col(key) == value for key, value in filters.items()]))
-
-        print(table.queries)
-        return table.to_pandas().rename(columns=str.lower)
+            where_parts = [f'"{k}" = :{k}' for k in filters]
+            sql += " WHERE " + " AND ".join(where_parts)
+            params = filters
+        return pd.read_sql(text(sql), self._engine, params=params).rename(columns=str.lower)
 
     def upload_files(self, path: Path, identifier: str, stage: str | None = None) -> str | None:
-        session = self.session
-        stage = stage or self.files_stage
-
-        files_to_save: list[Path] = list(path.glob("**/*"))
-        if len(files_to_save) == 0:
+        """Copy local files to storage under identifier. Returns storage path or None."""
+        if self._file_storage_path is None:
+            logger.warning("FILE_STORAGE_PATH not set; upload_files no-op")
             return None
-
-        directory_to_upload: list[Path] = []
-        for model in files_to_save:
-            if model.parent not in directory_to_upload:
-                directory_to_upload.append(model.parent)
-
-        target = f"{stage}/{identifier}"
-
-        for directory in directory_to_upload:
-            files = [f for f in directory.glob("*") if f.is_file() and f.suffix]
-            if not files:
-                continue
-
-            target_path = directory.relative_to(path).as_posix()
-            final_target = f"{target}/{target_path}" if target_path != "." else target
-            session.file.put(
-                # can't use `*`, or it fails, so the files NEED and extension to be uploaded
-                f"{directory.as_posix()}/*.*",
-                final_target,
-            )
-        return target
+        dest = self._file_storage_path / identifier
+        dest.mkdir(parents=True, exist_ok=True)
+        for item in path.rglob("*"):
+            if item.is_file():
+                rel = item.relative_to(path)
+                (dest / rel).parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(item, dest / rel)
+        return str(dest)
 
     def download_files(self, path: Path, identifier: str, stage: str | None = None) -> None:
-        session = self.session
-        stage = stage or self.files_stage
-
-        logger.info(f"Downloading files from {stage}/{identifier}")
-
-        session.file.get(identifier, str(path))
+        """Copy files from storage to local path."""
+        if self._file_storage_path is None:
+            raise ValueError("FILE_STORAGE_PATH not set; cannot download_files")
+        src = self._file_storage_path / identifier
+        if not src.exists():
+            raise FileNotFoundError(f"Storage path not found: {src}")
+        path.mkdir(parents=True, exist_ok=True)
+        if src.is_dir():
+            shutil.copytree(src, path, dirs_exist_ok=True)
+        else:
+            shutil.copy2(src, path)
 
 
 def categorize_column(col: Any) -> str:
+    """Map Python type to a simple category name (for compatibility)."""
     if isinstance(col, str):
         return "TEXT"
     if isinstance(col, int):
@@ -148,4 +158,4 @@ def categorize_column(col: Any) -> str:
         return "BOOLEAN"
     if isinstance(col, (datetime.datetime, pd.Timestamp)):
         return "TIMESTAMP"
-    return "OBJECT"
+    return "TEXT"

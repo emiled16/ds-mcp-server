@@ -1,10 +1,10 @@
-from typing import Literal, Optional
+from typing import Literal
 
 import pandas as pd
 from pydantic import Field
 from sklearn.preprocessing import OneHotEncoder
-from snowflake.snowpark import DataFrame as SnowparkDataFrame
 
+from src.data_science.compat import SnowparkDataFrame
 from src.data_science.ds_core.atomic_functions.pandas.encode_str import (
     encode_one_hot as pandas_encode_one_hot,
 )
@@ -16,7 +16,7 @@ from src.data_science.ds_core.definitions.orchestration.transformation import (
 
 class EncodeOneHotParameters(BaseParameter):
     column: str = Field(default="", description="Column to encode")
-    threshold: Optional[float] = Field(default=None, description="Threshold of frequency to encode")
+    threshold: float | None = Field(default=None, description="Threshold of frequency to encode")
     drop_original_column: bool = Field(default=True, description="Drop the original column")
 
 
@@ -29,7 +29,7 @@ class EncodeOneHot(BaseTransformation):
         If `drop_original_column` is True, the original column will be dropped.
     """
     parameters: EncodeOneHotParameters
-    encoder: Optional[OneHotEncoder] = Field(default=None)
+    encoder: OneHotEncoder | None = Field(default=None)
 
     def _fit_snowpark(self, df: SnowparkDataFrame) -> "EncodeOneHot":
         pass

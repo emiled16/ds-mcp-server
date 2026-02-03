@@ -1,9 +1,8 @@
 import threading
+from collections.abc import Generator
 from contextlib import contextmanager
-from typing import Generator
 
-from snowflake.snowpark import Session
-from snowflake.snowpark.context import get_active_session
+from src.data_science.snowflake_optional import Session, get_active_session, require_snowflake
 
 _transaction_lock = threading.RLock()
 _in_transaction: bool = False
@@ -12,6 +11,7 @@ _in_transaction: bool = False
 @contextmanager
 def snowflake_transaction() -> Generator[Session, None, None]:
     """Context wrapping the executed SQL queries in a Snowflake transaction."""
+    require_snowflake()
     with _transaction_lock:  # Prevent threads to share transactions
         global _in_transaction  # noqa: PLW0603 - Shared state for nested transactions
 

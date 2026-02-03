@@ -1,12 +1,16 @@
-from typing import Any, Union
+from typing import Any
 
 import pandas as pd
-from snowflake import snowpark
+from src.data_science.snowflake_optional import SNOWFLAKE_AVAILABLE, SnowparkDataFrame
+
+
+def _is_snowpark_df(df: Any) -> bool:
+    return SNOWFLAKE_AVAILABLE and SnowparkDataFrame is not None and isinstance(df, SnowparkDataFrame)
 
 
 def assert_frame_equal(
-    left: Union[pd.DataFrame, snowpark.DataFrame],
-    right: Union[pd.DataFrame, snowpark.DataFrame],
+    left: pd.DataFrame | Any,
+    right: pd.DataFrame | Any,
     *,
     ignore_index: bool = False,
     ignore_row_order: bool = False,
@@ -18,14 +22,14 @@ def assert_frame_equal(
 
     See: https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.testing.assert_frame_equal.html
     """
-    if isinstance(left, snowpark.DataFrame) or isinstance(right, snowpark.DataFrame):
+    if _is_snowpark_df(left) or _is_snowpark_df(right):
         ignore_index = True
         ignore_column_casing = True
         kwargs["check_dtype"] = False
 
-    if isinstance(left, snowpark.DataFrame):
+    if _is_snowpark_df(left):
         left = left.to_pandas()
-    if isinstance(right, snowpark.DataFrame):
+    if _is_snowpark_df(right):
         right = right.to_pandas()
 
     if ignore_column_casing:

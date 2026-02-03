@@ -1,13 +1,11 @@
-from typing import Union
-
-import snowflake.snowpark.functions as f
-from snowflake.snowpark import DataFrame as SnowparkDataFrame
+from src.data_science.snowflake_optional import F as f
+from src.data_science.snowflake_optional import SnowparkDataFrame, require_snowflake
 
 
 def aggregate(
     df: SnowparkDataFrame,
     dimensions: list[str],
-    aggregations: list[Union[tuple[str, str, str], tuple[str, str]]],
+    aggregations: list[tuple[str, str, str] | tuple[str, str]],
 ) -> SnowparkDataFrame:
     """
     Aggregate a dataframe by dimensions and aggregations.
@@ -32,10 +30,10 @@ def aggregate(
     Returns:
         The aggregated dataframe.
 
-
     Note:
         The aggregation function must be a valid Snowflake aggregation function.
     """
+    require_snowflake()
     agg_list = []
     named_agg_args_len = 3  # (column, aggregation function, new column name)
     unnamed_agg_args_len = 2  # (column, aggregation function)

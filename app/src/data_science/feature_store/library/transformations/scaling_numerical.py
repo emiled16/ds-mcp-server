@@ -1,10 +1,10 @@
-from typing import Literal, Optional, Union
+from typing import Literal
 
 import pandas as pd
 from pydantic import Field
 from sklearn.preprocessing import MinMaxScaler, PowerTransformer, RobustScaler, StandardScaler
-from snowflake.snowpark import DataFrame as SnowparkDataFrame
 
+from src.data_science.compat import SnowparkDataFrame
 from src.data_science.ds_core.atomic_functions.pandas.scaling_numerical import scale_data as pandas_scale_data
 from src.data_science.ds_core.definitions.orchestration.transformation import BaseParameter, BaseTransformation
 
@@ -22,7 +22,7 @@ class ScalingNumerical(BaseTransformation):
     display_name: str = "Scale Numerical Columns"
     description: str = "Scale numerical columns"
     parameters: ScalingNumericalParameters
-    scaler: Optional[Union[MinMaxScaler, StandardScaler, RobustScaler, PowerTransformer]] = Field(default=None)
+    scaler: MinMaxScaler | StandardScaler | RobustScaler | PowerTransformer | None = Field(default=None)
 
     def _fit_snowpark(self, df: SnowparkDataFrame) -> "ScalingNumerical":
         pass
@@ -41,10 +41,10 @@ class ScalingNumerical(BaseTransformation):
 
         # Scale the columns
         scaled_data = self.scaler.transform(df[self.parameters.columns])
-        
+
         # Create result dataframe
         result_df = df.copy()
-        
+
         if self.parameters.overwrite_columns:
             # Overwrite original columns with scaled values
             result_df[self.parameters.columns] = scaled_data

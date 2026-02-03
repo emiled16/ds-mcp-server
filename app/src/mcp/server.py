@@ -120,8 +120,8 @@ import src.mcp.tools.visualization.plot_precision_recall_curve
 import src.mcp.tools.visualization.plot_residuals
 import src.mcp.tools.visualization.plot_roc_curve  # noqa: F401
 from src.mcp.instance import mcp
+from src.storage.backends.dispatcher import get_object_store
 from src.storage.backends.postgres_document_store import PostgresDocumentStore
-from src.storage.backends.object_store import MinIOObjectStore
 from src.storage.repositories.registry import RepositoryRegistry
 
 # Configure logging
@@ -145,15 +145,10 @@ def _postgres_doc_store() -> PostgresDocumentStore:
 
 
 async def initialize_storage() -> None:
-    """Initialize Postgres and MinIO storage backends."""
+    """Initialize Postgres and object store (MinIO or GCS) backends."""
     logger.info("Initializing storage backends...")
     doc_store = _postgres_doc_store()
-    obj_store = MinIOObjectStore(
-        endpoint=os.getenv("MINIO_ENDPOINT"),
-        access_key=os.getenv("MINIO_ACCESS_KEY"),
-        secret_key=os.getenv("MINIO_SECRET_KEY"),
-        secure=False,
-    )
+    obj_store = get_object_store()
     registry = RepositoryRegistry(document_store=doc_store, object_store=obj_store)
     await registry.initialize()
     logger.info("Storage backends initialized successfully")

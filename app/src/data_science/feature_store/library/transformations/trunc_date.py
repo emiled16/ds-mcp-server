@@ -2,7 +2,7 @@ from typing import Literal, Union
 
 import pandas as pd
 from pydantic import Field
-from snowflake.snowpark import DataFrame as SnowparkDataFrame
+from src.data_science.compat import SnowparkDataFrame
 
 from src.data_science.ds_core.atomic_functions.pandas.truncate_date import truncate_date as truncate_date_pandas
 from src.data_science.ds_core.atomic_functions.snowpark.truncate_date import truncate_date as truncate_date_snowpark

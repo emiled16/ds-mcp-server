@@ -1,7 +1,7 @@
 from typing import Union
 
 import pandas as pd
-from snowflake.snowpark import DataFrame as SnowparkDataFrame
+from src.data_science.compat import SnowparkDataFrame
 
 from src.data_science.ds_core.definitions.orchestration.base_pipeline import BasePipeline
 

@@ -1,5 +1,6 @@
 from mlflow.exceptions import MlflowException
-from snowflake.snowpark import Session
+
+from src.data_science.snowflake_optional import Session, require_snowflake
 
 
 class DeploymentHelper:
@@ -8,6 +9,7 @@ class DeploymentHelper:
     _MLFLOW_MODEL_PREFIX = "MLFLOW$"
 
     def __init__(self, session: Session) -> None:
+        require_snowflake()
         self._session = session
 
     @staticmethod

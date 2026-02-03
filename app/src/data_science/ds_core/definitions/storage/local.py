@@ -5,7 +5,7 @@ from typing import Any, Literal
 import pandas as pd
 from loguru import logger
 from pydantic import model_validator
-from snowflake.snowpark import DataFrame as SnowparkDataFrame
+from src.data_science.compat import SnowparkDataFrame
 
 from src.data_science.ds_core.definitions.storage.base import BaseStorage, DataFrame
 

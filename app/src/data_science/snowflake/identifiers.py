@@ -1,10 +1,8 @@
 import re
-from typing import Optional, Tuple
+from typing import Annotated
 
 from pydantic import AfterValidator
-from snowflake.snowpark.context import get_active_session
-from snowflake.snowpark.session import Session
-from typing_extensions import Annotated
+from src.data_science.snowflake_optional import Session, get_active_session
 
 IDENTIFIER_REGEX = r"[A-Z_][A-Z0-9_]*"
 QUOTED_IDENTIFIER_REGEX = r'"[^"]+"'  # Anything within double quotes
@@ -56,19 +54,19 @@ def unquote_db_identifier(name: DbIdentifier) -> str:
     return name[1:-1] if name.startswith('"') and name.endswith('"') else name
 
 
-def current_database(session: Session) -> Optional[DbIdentifier]:
+def current_database(session: Session) -> DbIdentifier | None:
     if database := session.get_current_database():
         return db_identifier(database)
     return None
 
 
-def current_schema(session: Session) -> Optional[DbIdentifier]:
+def current_schema(session: Session) -> DbIdentifier | None:
     if schema := session.get_current_schema():
         return db_identifier(schema)
     return None
 
 
-def identifier_parts(session: Session, table_path: TablePath) -> Tuple[Optional[str], Optional[str], str]:
+def identifier_parts(session: Session, table_path: TablePath) -> tuple[str | None, str | None, str]:
     """Return the triple (database, schema, table) from the given path."""
     # TODO: python 3.10 - rewrite using `match` statement
     # => https://github.com/maxa-ai/maxa-console-streamlit-client_apps/blob/6701434cda6c479cb3d5a9089812ea95dc490f53/libs/maxa/snowflake/maxa/snowflake/identifiers.py#L45-L55

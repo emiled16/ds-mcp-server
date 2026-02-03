@@ -213,7 +213,7 @@ async def plot_feature_contributions(
         plt.tight_layout()
 
         # Save plot
-        plot_url = await save_plot_to_minio(fig, "feature_contributions")
+        _, plot_url = await save_plot_to_minio(fig, "feature_contributions")
         plt.close(fig)
 
         # Build result

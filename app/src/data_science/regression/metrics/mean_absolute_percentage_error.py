@@ -1,11 +1,10 @@
-from typing import Literal, Union
+from typing import Any, Literal
 
 import pandas as pd
 import sklearn.metrics as sklearn_metrics
-import snowflake.ml.modeling.metrics.regression as snowpark_metrics
-from snowflake import snowpark
 
 from src.data_science.regression.metrics.base import BaseMetric
+from src.data_science.snowflake_optional import snowpark_metrics_regression as snowpark_metrics
 
 
 class MeanAbsolutePercentageError(BaseMetric):
@@ -14,8 +13,8 @@ class MeanAbsolutePercentageError(BaseMetric):
     def _evaluate_local(
         self,
         dataset: pd.DataFrame,
-        y_true_col_names: Union[str, list[str]],
-        y_pred_col_names: Union[str, list[str]],
+        y_true_col_names: str | list[str],
+        y_pred_col_names: str | list[str],
     ):
         return sklearn_metrics.mean_absolute_percentage_error(
             y_true=dataset[y_true_col_names],
@@ -24,9 +23,9 @@ class MeanAbsolutePercentageError(BaseMetric):
 
     def _evaluate_snowflake(
         self,
-        dataset: snowpark.DataFrame,
-        y_true_col_names: Union[str, list[str]],
-        y_pred_col_names: Union[str, list[str]],
+        dataset: Any,
+        y_true_col_names: str | list[str],
+        y_pred_col_names: str | list[str],
     ):
         return snowpark_metrics.mean_absolute_percentage_error(
             df=dataset,

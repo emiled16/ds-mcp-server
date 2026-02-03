@@ -1,30 +1,25 @@
-from snowflake.snowpark import Session
-from sqlalchemy import Engine, create_engine, text
+"""PostgreSQL engine from DATABASE_URL."""
+
+import os
+
+from sqlalchemy import Engine, create_engine
+
+# Default for local dev if DATABASE_URL not set (override in .env)
+_DEFAULT_URL = "postgresql+psycopg2://localhost:5432/maxa_ds"
 
 
-def get_engine_from_session(session: Session) -> Engine:
-    # Your existing Snowflake connection (replace with your actual connection)
-    existing_snowflake_connection = session._conn._conn  # noqa: SLF001
-    existing_snowflake_connection._interpolate_empty_sequences = False
-    # sql alchemy needs pyformat binding
-    existing_snowflake_connection._paramstyle = "pyformat"  # noqa: SLF001
-    opts = ""
-    if session.get_current_warehouse() is not None:
-        opts += f"&warehouse={session.get_current_warehouse()}"
-    if session.get_current_role() is not None:
-        opts += f"&role={session.get_current_role()}"
-    conn_url = (
-        f"snowflake://{session.get_current_user() or ''}@{session.get_current_account()}/"
-        f"{session.get_current_database() or ''}/{session.get_current_schema() or ''}?{opts}"
+def get_engine(url: str | None = None) -> Engine:
+    """Create a SQLAlchemy engine for PostgreSQL.
+
+    Uses DATABASE_URL from environment if url is not provided.
+    Format: postgresql+psycopg2://user:password@host:port/dbname
+    """
+    connection_url = url or os.getenv("DATABASE_URL", _DEFAULT_URL)
+    # Allow postgres:// (Heroku-style) to work with psycopg2
+    if connection_url.startswith("postgres://"):
+        connection_url = connection_url.replace("postgres://", "postgresql+psycopg2://", 1)
+    return create_engine(
+        connection_url,
+        pool_pre_ping=True,
+        echo=os.getenv("SQL_ECHO", "").lower() in ("1", "true", "yes"),
     )
-    # Create an engine and bind it to the existing Snowflake connection
-    engine = create_engine(
-        url=conn_url,
-        creator=lambda: existing_snowflake_connection,
-    )
-
-    with engine.connect() as conn:
-        conn.execute(text("ALTER SESSION SET AUTOCOMMIT = TRUE"))
-        conn.commit()
-
-    return engine

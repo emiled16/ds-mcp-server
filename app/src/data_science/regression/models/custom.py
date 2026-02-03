@@ -3,13 +3,14 @@ from pathlib import Path
 import joblib
 import pandas as pd
 from mlflow.pyfunc.model import PythonModel
+from sklearn.base import RegressorMixin
 
 from src.data_science.ds_core.definitions.orchestration.pipeline import Pipeline
-from src.data_science.regression.models.base import SnowflakeModelClassType
+from src.data_science.regression.models.base import SklearnRegressorWrapper
 
 
 class CustomModel(PythonModel):
-    def __init__(self, pipeline: Pipeline, model: SnowflakeModelClassType):
+    def __init__(self, pipeline: Pipeline, model: RegressorMixin | SklearnRegressorWrapper):
         self.pipeline = pipeline
         self.model = model
 

@@ -1,16 +1,17 @@
 import json
-from typing import Any, Type, Union
+from typing import Any, Union
 
 import pandas as pd
 from pydantic import BaseModel, ConfigDict, Field
-from snowflake.snowpark import DataFrame as SnowparkDataFrame
+
+from src.data_science.compat import SnowparkDataFrame
 
 
 class BaseVariable(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True, extra="forbid")
     name: str
     description: str
-    type: Type[Any]
+    type: type[Any]
 
     def __hash__(self) -> int:
         dump = self.model_dump(exclude={"type"})

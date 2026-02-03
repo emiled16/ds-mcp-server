@@ -2,7 +2,6 @@ import json
 import os
 import tempfile
 from pathlib import Path
-from typing import Any, Optional
 
 import numpy as np
 import pandas as pd
@@ -11,18 +10,19 @@ from loguru import logger
 from mlflow.exceptions import MlflowException
 from mlflow.models import Model
 from mlflow.pyfunc import FLAVOR_NAME as PYFUNC_FLAVOR_NAME
-from snowflake.snowpark import Session
-from snowflake.snowpark.types import (
+
+from src.data_science.regression.deployment.pkg_utils import extract_package_requirements
+from src.data_science.snowflake_optional import (
     BooleanType,
     ByteType,
     FloatType,
     IntegerType,
     PandasDataFrameType,
     PandasSeriesType,
+    Session,
     StringType,
+    require_snowflake,
 )
-
-from src.data_science.regression.deployment.pkg_utils import extract_package_requirements
 
 _MLMODEL_FILE_NAME = "MLmodel"
 _REQUIREMENTS_TXT = "requirements.txt"
@@ -140,7 +140,7 @@ class InferUDFHelper:
         model_path: str,
         name: str,
         use_latest_package_version: bool,
-        stage_location: Optional[str],
+        stage_location: str | None,
     ) -> None:
         self._model_path = model_path
         self._name = name
@@ -156,10 +156,10 @@ class InferUDFHelper:
         self,
         *,
         session: Session,
-        max_batch_size: Optional[int],
+        max_batch_size: int | None,
         persist_udf_file: bool,
-        test_data_X: Optional[pd.DataFrame],
-        test_data_y: Optional[pd.Series],
+        test_data_X: pd.DataFrame | None,
+        test_data_y: pd.Series | None,
     ):
         """Generate model backed UDF in Snowflake warehouse.
 
@@ -190,11 +190,11 @@ class InferUDFHelper:
         model_full_path: str,
         udf_name: str,
         packages: list[str],
-        stage_location: Optional[str],
-        max_batch_size: Optional[int] = None,
+        stage_location: str | None,
+        max_batch_size: int | None = None,
         persist_udf_file: bool = False,
-        test_data_X: Optional[pd.DataFrame] = None,
-        test_data_y: Optional[pd.Series] = None,
+        test_data_X: pd.DataFrame | None = None,
+        test_data_y: pd.Series | None = None,
     ):
         output_type = model_signature.outputs.numpy_types()[0]
         input_types = model_signature.inputs.numpy_types()
@@ -284,12 +284,12 @@ def upload_model_from_mlflow(
     *,
     model_dir_path: str,
     udf_name: str,
-    max_batch_size: Optional[int] = None,
+    max_batch_size: int | None = None,
     persist_udf_file: bool = True,
-    test_data_X: Optional[pd.DataFrame] = None,
-    test_data_y: Optional[pd.Series] = None,
+    test_data_X: pd.DataFrame | None = None,
+    test_data_y: pd.Series | None = None,
     use_latest_package_version: bool = True,
-    stage_location: Optional[str] = None,
+    stage_location: str | None = None,
 ):
     """Upload a supported model packaged by MLflow to be deployed as Snowflake Python UDF.
 
@@ -315,6 +315,7 @@ def upload_model_from_mlflow(
             It can be any stage other than temporary stages and external stages. If not specified,
             UDF deployment is temporary and tied to the session. Default to be none.
     """
+    require_snowflake()
     model_config_path = Path(model_dir_path) / _MLMODEL_FILE_NAME
     remove_required_in_signature(model_dir_path)
     if not model_config_path.exists():

@@ -2,7 +2,7 @@ from typing import Literal, Union
 
 import pandas as pd
 from pydantic import Field
-from snowflake.snowpark import DataFrame as SnowparkDataFrame
+from src.data_science.compat import SnowparkDataFrame
 
 from src.data_science.ds_core.definitions.orchestration.io import BaseInput
 from src.data_science.ds_core.definitions.orchestration.transformation import BaseParameter, BaseTransformation

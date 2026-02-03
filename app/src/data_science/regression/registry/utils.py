@@ -3,16 +3,14 @@ import json
 import shutil
 import tempfile
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 import mlflow
 from mlflow.pyfunc import PyFuncModel
 from mlflow.tracking.artifact_utils import _download_artifact_from_uri
-from snowflake.ml.model.model_signature import ModelSignature
-from snowflake.ml.registry import Registry
-from snowflake.snowpark import Session
 
 from src.data_science.regression.models.custom import CustomModel
+from src.data_science.snowflake_optional import ModelSignature, Registry, Session, require_snowflake
 
 
 def process_mlflow_types(data):
@@ -26,6 +24,7 @@ def process_mlflow_types(data):
 
 
 def process_model_signature(model_conf: PyFuncModel) -> ModelSignature:
+    require_snowflake()
     return ModelSignature.from_dict(
         process_mlflow_types({k: json.loads(v) for k, v in model_conf.metadata.signature.to_dict().items() if v}),
     )
@@ -87,7 +86,7 @@ def bundle_model_files(tmpdir: Path, lib_prefix: str = "maxa") -> None:
     (tmpdir / lib_prefix).mkdir(parents=True, exist_ok=True)
 
     for path in paths:
-        file_path = f"{str(path)}/**/*.py"
+        file_path = f"{path!s}/**/*.py"
         for file in glob.glob(file_path, recursive=True):
             relative_path = file.split(f"/{lib_prefix}/")
             # create the directories:
@@ -106,9 +105,9 @@ def register_model_to_snowflake(
     model_name: str,
     version_name: str,
     model_registry: Registry,
-    metrics: Optional[dict[str, Any]] = None,
-    comment: Optional[str] = None,
-    python_version: Optional[str] = "3.10",
+    metrics: dict[str, Any] | None = None,
+    comment: str | None = None,
+    python_version: str | None = "3.10",
     embed_local_ml_library: bool = True,
     conda_dependencies: list[str] = [
         "pydantic",
@@ -121,6 +120,7 @@ def register_model_to_snowflake(
         "streamlit",
     ],
 ):
+    require_snowflake()
     with tempfile.TemporaryDirectory() as tmpdir:
         LIB_PREFIX = "maxa"
         bundle_model_files(Path(tmpdir), LIB_PREFIX)

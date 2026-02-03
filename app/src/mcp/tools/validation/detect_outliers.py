@@ -227,7 +227,7 @@ async def detect_outliers(
                 axes[idx].set_visible(False)
 
             plt.tight_layout()
-            plot_object_key, plot_url = save_plot_to_minio(fig, f"outliers_{method}")
+            plot_object_key, plot_url = await save_plot_to_minio(fig, f"outliers_{method}")
             close_figure(fig)
 
         # Generate summary

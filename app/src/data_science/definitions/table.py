@@ -4,7 +4,7 @@ from typing import Annotated, Any, Union
 
 import pandas as pd
 from pydantic import AfterValidator, BaseModel
-from snowflake.snowpark import DataFrame, Session
+from src.data_science.snowflake_optional import Session, SnowparkDataFrame as DataFrame
 
 
 def quote_db_identifier(name: str) -> str:

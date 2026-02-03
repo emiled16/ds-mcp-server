@@ -1,0 +1,11 @@
+{
+  "files.associations": {
+    "**/charts/**/templates/*.yaml": "helm",
+    "**/charts/**/templates/*.yml": "helm",
+    "**/charts/**/templates/*.tpl": "helm"
+  },
+  "yaml.validate": true,
+  "[helm]": {
+    "editor.defaultFormatter": "redhat.vscode-yaml"
+  }
+}
