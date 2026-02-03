@@ -1,4 +1,5 @@
-
+# Dev overrides - merge with values.yaml
+# Replace placeholders with Terraform outputs after tf-apply
 mcp:
   replicas: 1
 celery:
@@ -13,4 +14,9 @@ ingress:
   enabled: false
 
 externalSecrets:
-  projectId: "YOUR_PROJECT_ID"
+  projectId: "REPLACE_WITH_PROJECT_ID"
+
+# GCP-specific (use objectStoreBackend: gcs when deploying to GCP)
+env:
+  objectStoreBackend: "gcs"
+  # redisHost, postgresHost, gcsArtifactsBucket - override with Terraform outputs

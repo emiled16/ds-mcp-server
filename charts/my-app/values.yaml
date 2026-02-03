@@ -6,14 +6,15 @@ images:
   mcp:
     repository: "REPLACE_WITH_ARTIFACT_REGISTRY/mcp"
     tag: "latest"
+  # celery and flower use the same MCP image with different commands
   celery:
-    repository: "REPLACE_WITH_ARTIFACT_REGISTRY/celery"
+    repository: "REPLACE_WITH_ARTIFACT_REGISTRY/mcp"
     tag: "latest"
   mlflow:
     repository: "REPLACE_WITH_ARTIFACT_REGISTRY/mlflow"
     tag: "latest"
   flower:
-    repository: "REPLACE_WITH_ARTIFACT_REGISTRY/flower"
+    repository: "REPLACE_WITH_ARTIFACT_REGISTRY/mcp"
     tag: "latest"
 
 mcp:
@@ -71,3 +72,5 @@ env:
   postgresDb: "mlflow"
   postgresUser: "appuser"
   gcsArtifactsBucket: "REPLACE_WITH_BUCKET"
+  objectStoreBackend: "minio"  # minio (local) or gcs (GCP)
+  mlflowServerUrl: ""  # empty = auto: http://<release>-mlflow:5000

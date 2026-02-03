@@ -1,4 +1,3 @@
-
 {{- if .Values.flower.enabled }}
 apiVersion: v1
 kind: Service
