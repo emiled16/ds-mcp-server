@@ -1,0 +1,30 @@
+# Argo CD Application: deploys the my-app Helm chart from this repo (GitOps).
+# Apply after Argo CD is installed: kubectl apply -f argocd/application.yaml
+#
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: my-app
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/emiled16/ds-mcp-server.git # set repoURL to your repo (e.g. https://github.com/your-org/maxa-ds-agent-infra).
+    targetRevision: main # set targetRevision to your default branch (e.g. main).
+    path: charts/my-app
+    helm:
+      valueFiles:
+        - values-dev.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: app
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
