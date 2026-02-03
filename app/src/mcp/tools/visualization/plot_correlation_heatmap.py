@@ -116,7 +116,7 @@ async def plot_correlation_heatmap(
         plt.tight_layout()
 
         # Save plot
-        object_key, plot_url = save_plot_to_minio(fig, f"correlation_{method}")
+        object_key, plot_url = await save_plot_to_minio(fig, f"correlation_{method}")
         close_figure(fig)
 
         # Find strong correlations

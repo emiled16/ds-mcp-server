@@ -1,9 +1,9 @@
-from typing import Literal, Union
+from typing import Literal
 
 import pandas as pd
 from pydantic import Field
-from snowflake.snowpark import DataFrame as SnowparkDataFrame
 
+from src.data_science.compat import SnowparkDataFrame
 from src.data_science.ds_core.atomic_functions.pandas.drop_rows_duplicates import (
     drop_rows_duplicates as drop_rows_duplicates_pandas,
 )
@@ -31,7 +31,7 @@ class DropRowsDuplicates(BaseTransformation):
     description: str = "Drop duplicate rows from a dataframe based on specified columns"
     parameters: DropRowsDuplicatesParameters
 
-    def _fit(self, _df: Union[pd.DataFrame, SnowparkDataFrame]) -> "DropRowsDuplicates":
+    def _fit(self, _df: pd.DataFrame | SnowparkDataFrame) -> "DropRowsDuplicates":
         return self
 
     def _fit_snowpark(self, df: SnowparkDataFrame) -> "DropRowsDuplicates":

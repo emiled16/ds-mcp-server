@@ -2,7 +2,7 @@ from typing import List, Optional, Union
 
 import pandas as pd
 from pydantic import BaseModel, model_validator
-from snowflake.snowpark import DataFrame as SnowparkDataFrame
+from src.data_science.compat import SnowparkDataFrame
 
 
 # Base class for holding universal dataframe

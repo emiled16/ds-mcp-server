@@ -205,7 +205,7 @@ async def explain_with_lime(
         plt.tight_layout()
 
         # Save plot
-        plot_url = await save_plot_to_minio(fig, "lime_explanation")
+        _, plot_url = await save_plot_to_minio(fig, "lime_explanation")
         plt.close(fig)
 
         # Build result

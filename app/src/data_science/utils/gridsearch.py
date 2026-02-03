@@ -4,7 +4,7 @@ from optuna import Trial
 from pydantic import BaseModel
 
 from src.data_science.regression.models import RegressorGridSearchConfig, RegressorModel
-from src.data_science.regression.models.base import SnowflakeModelClassType
+from src.data_science.regression.models.base import SklearnRegressorWrapper
 
 
 def get_model_from_model_config(
@@ -13,7 +13,7 @@ def get_model_from_model_config(
     output_cols: list[str] | str | None = None,
     target_cols: list[str] | str | None = None,
     passthrough_cols: list[str] | str | None = None,
-) -> SnowflakeModelClassType:
+) -> SklearnRegressorWrapper:
     class Forecaster(BaseModel):
         model: RegressorModel
 
@@ -31,7 +31,7 @@ def suggest_model(
     input_cols: list[str],
     target_cols: list[str],
     output_cols: list[str],
-) -> SnowflakeModelClassType:
+) -> SklearnRegressorWrapper:
     return get_model_from_model_config(
         next(
             model

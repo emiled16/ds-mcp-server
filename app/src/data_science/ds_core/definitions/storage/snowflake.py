@@ -2,16 +2,15 @@ import pickle
 import shutil
 import uuid
 from pathlib import Path
-from typing import Any, Literal, Optional
+from typing import Any, Literal
 
 import pandas as pd
 from dotenv import dotenv_values
 from loguru import logger
 from pydantic import model_validator
-from snowflake.snowpark import Session
-from snowflake.snowpark.context import get_active_session
 
 from src.data_science.ds_core.definitions.storage.base import BaseStorage, DataFrame
+from src.data_science.snowflake_optional import Session, get_active_session, require_snowflake
 
 
 class SnowflakeStorage(BaseStorage):
@@ -22,7 +21,7 @@ class SnowflakeStorage(BaseStorage):
     warehouse: str
     database: str
     schema_name: str
-    stage: Optional[str] = None
+    stage: str | None = None
 
     @classmethod
     def from_dotenv(cls, env_file: str = ".env") -> "SnowflakeStorage":
@@ -50,6 +49,7 @@ class SnowflakeStorage(BaseStorage):
         self._create_stage()
 
     def _get_connection(self) -> Session:
+        require_snowflake()
         return get_active_session()
 
     def _create_connection(self):

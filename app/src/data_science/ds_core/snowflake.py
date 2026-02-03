@@ -1,16 +1,19 @@
 import os
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any
 
 # from src.data_science.snowflake.session import create_snowpark_session
-from snowflake.snowpark import Session
-from snowflake.snowpark.context import get_active_session
-from snowflake.snowpark.exceptions import SnowparkSessionException
+from src.data_science.snowflake_optional import (
+    Session,
+    SnowparkSessionException,
+    get_active_session,
+    require_snowflake,
+)
 
 SNOWFLAKE_SESSION_CREDENTIALS_FILE_NAME = "/snowflake/session/token"
 
 
-def _make_snowpark_creds(credentials_file: Path) -> Dict[str, Any]:
+def _make_snowpark_creds(credentials_file: Path) -> dict[str, Any]:
     """
     Ref: https://docs.snowflake.com/en/developer-guide/python-connector/python-connector-connect
     """
@@ -49,6 +52,7 @@ def _make_snowpark_creds(credentials_file: Path) -> Dict[str, Any]:
 
 
 def create_snowpark_session(credentials_file: Path = Path(SNOWFLAKE_SESSION_CREDENTIALS_FILE_NAME)) -> Session:
+    require_snowflake()
     creds = _make_snowpark_creds(credentials_file)
     return Session.builder.configs(creds).create()
 
@@ -63,6 +67,7 @@ def snowpark_session() -> Session:
 
 def snowflake_session(query_tag: str = "snowpark", env_file: str = ".env") -> Session:
     """Either return the available Snowpark session or create a new one."""
+    require_snowflake()
     try:
         session = get_active_session()
     except SnowparkSessionException:

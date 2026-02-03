@@ -220,7 +220,7 @@ async def detect_data_drift(
                 ax.grid(alpha=0.3)
 
             plt.tight_layout()
-            plot_object_key, plot_url = save_plot_to_minio(fig, "data_drift")
+            plot_object_key, plot_url = await save_plot_to_minio(fig, "data_drift")
             close_figure(fig)
 
         # Generate summary

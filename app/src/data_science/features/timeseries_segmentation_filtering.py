@@ -2,10 +2,10 @@ from typing import Literal
 
 import pandas as pd
 from pydantic import Field
-from snowflake.snowpark import DataFrame as SnowparkDataFrame
-from snowflake.snowpark import functions as F
 
+from src.data_science.compat import SnowparkDataFrame
 from src.data_science.ds_core.definitions.orchestration.transformation import BaseParameter, BaseTransformation
+from src.data_science.snowflake_optional import F, require_snowflake
 from src.data_science.utils.snowflake import snowpark_session
 
 
@@ -46,6 +46,7 @@ class TimeSeriesSegmemtationFiltering(BaseTransformation):
         raise NotImplementedError("TimeSeriesSegmemtationFiltering is not implemented for snowpark")
 
     def _transform_pandas(self, df: pd.DataFrame) -> pd.DataFrame:
+        require_snowflake()
         session = snowpark_session()
 
         table_fqn = f"{self.parameters.database_name}.{self.parameters.schema_name}.{self.parameters.table_name}"
@@ -64,10 +65,8 @@ class TimeSeriesSegmemtationFiltering(BaseTransformation):
                 ]
             ]
             .assign(
-                **{
-                    "counterparty_id": lambda _d: _d[self.parameters.dim_value_name].apply(lambda x: x.split("::")[0]),
-                    "direction": lambda _d: _d[self.parameters.dim_value_name].apply(lambda x: x.split("::")[1]),
-                }
+                counterparty_id=lambda _d: _d[self.parameters.dim_value_name].apply(lambda x: x.split("::")[0]),
+                direction=lambda _d: _d[self.parameters.dim_value_name].apply(lambda x: x.split("::")[1]),
             )
             .drop_duplicates()
         )

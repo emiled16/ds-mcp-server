@@ -1,9 +1,9 @@
-from typing import Literal, Union
+from typing import Literal
 
 import pandas as pd
 from pydantic import Field
-from snowflake.snowpark import DataFrame as SnowparkDataFrame
 
+from src.data_science.compat import SnowparkDataFrame
 from src.data_science.ds_core.atomic_functions.pandas.rename_cols import rename_cols as rename_cols_pandas
 from src.data_science.ds_core.atomic_functions.snowpark.rename_cols import rename_cols as rename_cols_snowpark
 from src.data_science.ds_core.definitions.orchestration.transformation import BaseParameter, BaseTransformation
@@ -28,7 +28,7 @@ class RenameColumns(BaseTransformation):
     description: str = "Rename columns of a dataframe"
     parameters: RenameColumnsParameters = Field(default=RenameColumnsParameters())
 
-    def _fit(self, _df: Union[pd.DataFrame, SnowparkDataFrame]) -> "RenameColumns":
+    def _fit(self, _df: pd.DataFrame | SnowparkDataFrame) -> "RenameColumns":
         return self
 
     def _fit_snowpark(self, df: SnowparkDataFrame) -> "RenameColumns":

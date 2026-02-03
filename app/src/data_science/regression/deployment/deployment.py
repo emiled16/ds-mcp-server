@@ -1,16 +1,15 @@
 from enum import Enum, unique
-from typing import Any, Optional, Set
+from typing import Any
 
 import pandas as pd
 from mlflow.deployments import BaseDeploymentClient
 from mlflow.exceptions import MlflowException
 from mlflow.tracking.artifact_utils import _download_artifact_from_uri
 from mlflow.utils.annotations import experimental
-from snowflake.snowpark import Session
-from snowflake.snowpark import functions as F
 
 from src.data_science.regression.deployment.management_utils import DeploymentHelper
 from src.data_science.regression.deployment.udf_utils import upload_model_from_mlflow
+from src.data_science.snowflake_optional import F, Session, require_snowflake
 
 
 @unique
@@ -38,6 +37,7 @@ class SnowflakeDeploymentClient(BaseDeploymentClient):
     """
 
     def __init__(self, session: Session, target_uri: str = "snowflake") -> None:
+        require_snowflake()
         super().__init__(target_uri)
         self._session = session
         self._validate_session()
@@ -58,9 +58,9 @@ class SnowflakeDeploymentClient(BaseDeploymentClient):
         self,
         name: str,
         model_uri: str,
-        flavor: Optional[str] = None,
-        config: Optional[dict[str, Any]] = None,
-        endpoint: Optional[str] = None,
+        flavor: str | None = None,
+        config: dict[str, Any] | None = None,
+        endpoint: str | None = None,
     ) -> dict[str, Any]:
         """Deploy the model to Snowflake as a UDF.
         This method blocks until the deployment operation is completed.

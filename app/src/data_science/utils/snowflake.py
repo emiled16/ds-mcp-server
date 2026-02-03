@@ -1,13 +1,13 @@
 import os
 
 from dotenv import load_dotenv
-from snowflake.snowpark.context import get_active_session
-from snowflake.snowpark.session import Session
 
 from src.data_science.snowflake.session import create_snowpark_session
+from src.data_science.snowflake_optional import Session, get_active_session, require_snowflake
 
 
 def snowpark_session() -> Session:
+    require_snowflake()
     load_dotenv(".env", override=True)
     try:
         return get_active_session()
@@ -25,7 +25,6 @@ from tempfile import TemporaryDirectory
 
 import pandas as pd
 from pandas.core.dtypes.common import is_datetime64_any_dtype
-from snowflake.snowpark import Session
 
 from src.data_science.snowflake.data_types import VARIANT_TYPES
 from src.data_science.snowflake.identifiers import TablePath, identifier_parts
@@ -46,6 +45,7 @@ def write_pandas(session: Session, table_path: TablePath, df: pd.DataFrame) -> N
     - https://docs.snowflake.com/en/user-guide/script-data-load-transform-parquet.html#sql-script-1-load-parquet-data
     - https://docs.snowflake.com/en/user-guide/python-connector-api.html#write_pandas
     """
+    require_snowflake()
     if df.empty:
         return
 

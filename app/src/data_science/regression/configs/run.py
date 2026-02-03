@@ -1,19 +1,17 @@
-from typing import Literal, Optional
-
 from pydantic import BaseModel, Field
 
 from src.data_science.ds_core.definitions.splitters import Splitter
 from src.data_science.feature_store.src.config import Config as FeatureStoreConfig
 from src.data_science.regression.metrics import Metric, Scorer
 from src.data_science.regression.models import RegressorModel
-from src.data_science.regression.models.base import SnowflakeModelClassType
+from src.data_science.regression.models.base import SklearnRegressorWrapper
 from src.data_science.regression.models.custom import CustomModel
 
 
 class RunConfig(BaseModel):
-    experiment_name: Optional[str] = None
-    tracking_uri: Optional[str] = None
-    tags: Optional[dict] = None
+    experiment_name: str | None = None
+    tracking_uri: str | None = None
+    tags: dict | None = None
 
     input_cols: list[str]
     output_cols: list[str]
@@ -23,7 +21,7 @@ class RunConfig(BaseModel):
     metrics: list[Metric]
     pipeline: FeatureStoreConfig = Field(default_factory=FeatureStoreConfig)
 
-    def get_model(self) -> SnowflakeModelClassType:
+    def get_model(self) -> SklearnRegressorWrapper:
         return self.model.get_model(
             input_cols=self.input_cols,
             output_cols=self.output_cols,

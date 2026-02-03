@@ -1,5 +1,4 @@
-import snowflake.snowpark.functions as f
-from snowflake.snowpark import DataFrame as SnowparkDataFrame
+from src.data_science.snowflake_optional import SnowparkDataFrame, require_snowflake
 
 
 def select_cols(df: SnowparkDataFrame, columns: list[str]) -> SnowparkDataFrame:
@@ -11,4 +10,5 @@ def select_cols(df: SnowparkDataFrame, columns: list[str]) -> SnowparkDataFrame:
     Returns:
         The dataframe with selected columns.
     """
+    require_snowflake()
     return df.select(columns)

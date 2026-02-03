@@ -4,6 +4,14 @@ This module provides reusable fixtures for testing storage, MCP tools, and worke
 """
 
 import asyncio
+
+# Load .env before any other imports so env vars are available during tests
+from pathlib import Path
+
+from dotenv import load_dotenv
+
+load_dotenv(Path(__file__).resolve().parent.parent / ".env")
+
 import os
 from collections.abc import AsyncGenerator, Generator
 from typing import Any
@@ -12,10 +20,9 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 
 from src.models.tool_response import ToolResponse
-from src.storage.backends.postgres_document_store import PostgresDocumentStore
 from src.storage.backends.object_store import MinIOObjectStore
-from src.storage.repositories.registry import RepositoryRegistry, set_repository_registry
-
+from src.storage.backends.postgres_document_store import PostgresDocumentStore
+from src.storage.repositories.registry import RepositoryRegistry
 
 # =============================================================================
 # Event Loop Fixtures
@@ -89,7 +96,7 @@ async def mock_registry(
         object_store=mock_object_store,
     )
     await registry.initialize()
-    yield registry
+    return registry
 
 
 # =============================================================================
@@ -140,7 +147,7 @@ async def registry(
         object_store=obj_store,
     )
     await reg.initialize()
-    yield reg
+    return reg
 
 
 # =============================================================================
@@ -189,4 +196,3 @@ async def cleanup_test_data(request: pytest.FixtureRequest) -> AsyncGenerator[No
         await doc_store.delete_many("notes")
     except Exception:
         pass  # doc_store not requested or cleanup failed
-

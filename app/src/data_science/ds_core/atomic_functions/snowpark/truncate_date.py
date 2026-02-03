@@ -1,14 +1,12 @@
-from typing import Optional
-
-import snowflake.snowpark.functions as f
-from snowflake.snowpark import DataFrame as SnowparkDataFrame
+from src.data_science.snowflake_optional import F as f
+from src.data_science.snowflake_optional import SnowparkDataFrame, require_snowflake
 
 
 def truncate_date(
     df: SnowparkDataFrame,
     date_col: str,
     truncate_to: str,
-    output_col: Optional[str] = None,
+    output_col: str | None = None,
 ) -> SnowparkDataFrame:
     """
     Truncate a date column to a specific unit of time.
@@ -20,5 +18,6 @@ def truncate_date(
     Returns:
         The dataframe with the date column truncated.
     """
+    require_snowflake()
     output_col = output_col or date_col
     return df.with_column_renamed(f.date_trunc(truncate_to, f.col(date_col)), output_col)

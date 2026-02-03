@@ -14,7 +14,7 @@ from src.data_science.database.schema import SCHEMA_EXPERIMENT
 class HPTScores(Base):
     __tablename__ = "hpt_scores"
     __table_args__ = ({"schema": SCHEMA_EXPERIMENT},)
-    id = Column(String, primary_key=True, server_default=text("uuid_string()"))
+    id = Column(String, primary_key=True, server_default=text("gen_random_uuid()::text"))
     run_id = Column(String, nullable=False)
     experiment_id = Column(String, nullable=False)
     feature_store_id = Column(String, nullable=False)

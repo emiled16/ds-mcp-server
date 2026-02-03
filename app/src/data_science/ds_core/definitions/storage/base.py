@@ -3,7 +3,7 @@ from typing import Any, Literal, Union
 
 import pandas as pd
 from pydantic import BaseModel
-from snowflake.snowpark import DataFrame as SnowparkDataFrame
+from src.data_science.compat import SnowparkDataFrame
 
 DataFrame = Union[pd.DataFrame, SnowparkDataFrame]
 

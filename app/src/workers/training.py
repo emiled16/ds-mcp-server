@@ -1,6 +1,6 @@
 """Model training utilities using data_science infrastructure.
 
-Uses Snowflake ML models which work locally with pandas DataFrames.
+Uses sklearn-compatible models with pandas DataFrames.
 """
 
 import os
@@ -81,7 +81,7 @@ def get_dataset(dataset_id: str) -> pd.DataFrame | None:
 
 
 def create_model(model_type: str, hyperparameters: dict, input_cols: list, target_col: str):
-    """Create a Snowflake ML model instance."""
+    """Create a sklearn-compatible model instance."""
     model_class = MODEL_REGISTRY.get(model_type)
     if not model_class:
         raise ValueError(f"Unknown model type: {model_type}. Available: {list(MODEL_REGISTRY.keys())}")

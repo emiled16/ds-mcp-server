@@ -4,8 +4,8 @@ import os
 import polars as pl
 
 from src.models.tool_response import ToolResponse
+from src.storage.backends.dispatcher import get_object_store
 from src.storage.backends.postgres_document_store import PostgresDocumentStore
-from src.storage.backends.object_store import MinIOObjectStore
 from src.storage.repositories.registry import RepositoryRegistry
 
 
@@ -23,13 +23,8 @@ async def main():
         schema=os.getenv("POSTGRES_SCHEMA", "app"),
     )
 
-    # MinIO for large objects
-    obj_store = MinIOObjectStore(
-        endpoint="localhost:9000",
-        access_key="minioadmin",
-        secret_key="minioadmin",
-        secure=False,
-    )
+    # Object store: MinIO (local) or GCS (GCP) - from OBJECT_STORE_BACKEND env
+    obj_store = get_object_store()
 
     # 2. Create repository registry
     registry = RepositoryRegistry(

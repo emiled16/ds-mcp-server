@@ -1,4 +1,4 @@
-from snowflake.snowpark import DataFrame as SnowparkDataFrame
+from src.data_science.snowflake_optional import SnowparkDataFrame, require_snowflake
 
 
 def rename_cols(df: SnowparkDataFrame, columns: dict[str, str]) -> SnowparkDataFrame:
@@ -10,4 +10,5 @@ def rename_cols(df: SnowparkDataFrame, columns: dict[str, str]) -> SnowparkDataF
     Returns:
         The dataframe with renamed columns.
     """
+    require_snowflake()
     return df.rename(columns=columns)

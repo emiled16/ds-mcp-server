@@ -1,10 +1,10 @@
-from typing import Literal, Optional
+from typing import Literal
 
 import pandas as pd
 from pydantic import Field
 from sklearn.decomposition import PCA
-from snowflake.snowpark import DataFrame as SnowparkDataFrame
 
+from src.data_science.compat import SnowparkDataFrame
 from src.data_science.ds_core.atomic_functions.pandas.feature_reduction import pca_reduction as pandas_pca_reduction
 from src.data_science.ds_core.definitions.orchestration.transformation import BaseParameter, BaseTransformation
 
@@ -21,7 +21,7 @@ class ReductionPCA(BaseTransformation):
         Create principal components from the dataframe.
     """
     parameters: ReductionPCAParameters
-    pca_transformer: Optional[PCA] = None
+    pca_transformer: PCA | None = None
 
     def _fit_snowpark(self, df: SnowparkDataFrame) -> "ReductionPCA":
         pass

@@ -1,13 +1,13 @@
 import os
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any
 
-from snowflake.snowpark import Session
+from src.data_science.snowflake_optional import Session, require_snowflake
 
 SNOWFLAKE_SESSION_CREDENTIALS_FILE_NAME = "/snowflake/session/token"
 
 
-def _make_snowpark_creds(credentials_file: Path) -> Dict[str, Any]:
+def _make_snowpark_creds(credentials_file: Path) -> dict[str, Any]:
     """
     Ref: https://docs.snowflake.com/en/developer-guide/python-connector/python-connector-connect
     """
@@ -62,7 +62,8 @@ def _make_snowpark_creds(credentials_file: Path) -> Dict[str, Any]:
     return creds
 
 
-def create_snowpark_session(credentials_file: Path = Path(SNOWFLAKE_SESSION_CREDENTIALS_FILE_NAME)) -> Session:
+def create_snowpark_session(credentials_file: Path = Path(SNOWFLAKE_SESSION_CREDENTIALS_FILE_NAME)) -> "Session":
+    require_snowflake()
     # creds = _make_snowpark_creds(credentials_file)
     creds = {
         "account": os.getenv("SNOWFLAKE_ACCOUNT"),

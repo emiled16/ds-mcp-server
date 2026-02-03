@@ -1,8 +1,7 @@
-from typing import Any, Union
+from typing import Any
 
 import pandas as pd
 from mlflow.models.signature import ModelSignature
-from snowflake import snowpark
 
 from src.data_science.ds_core.definitions.splitters import Splitter
 from src.data_science.regression.configs.run import RunConfig
@@ -13,7 +12,7 @@ from src.data_science.regression.run.logger import log_run
 
 
 def launch_run(
-    dataset: Union[pd.DataFrame, snowpark.DataFrame],
+    dataset: pd.DataFrame | Any,
     python_model: CustomModel,
     splitter: Splitter,
     scorer: Scorer,

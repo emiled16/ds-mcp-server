@@ -1,10 +1,10 @@
-from typing import Literal, Optional
+from typing import Literal
 
 import pandas as pd
 from pydantic import Field
 from sklearn.cluster import FeatureAgglomeration as SKLearnFeatureAgglomeration
-from snowflake.snowpark import DataFrame as SnowparkDataFrame
 
+from src.data_science.compat import SnowparkDataFrame
 from src.data_science.ds_core.atomic_functions.pandas.feature_reduction import (
     feature_agglomeration as pandas_feature_agglomeration,
 )
@@ -24,7 +24,7 @@ class FeatureAgglomeration(BaseTransformation):
         Agglomerate features into a single feature.
     """
     parameters: FeatureAgglomerationParameters
-    agglomeration_transformer: Optional[SKLearnFeatureAgglomeration] = None
+    agglomeration_transformer: SKLearnFeatureAgglomeration | None = None
 
     def _fit_snowpark(self, df: SnowparkDataFrame) -> "FeatureAgglomeration":
         pass

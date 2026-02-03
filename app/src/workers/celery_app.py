@@ -11,11 +11,22 @@ from celery import Celery
 from celery.signals import worker_process_init
 from loguru import logger
 
+
+def _redis_url() -> str:
+    """Build Redis URL from REDIS_URL or REDIS_HOST+REDIS_PORT."""
+    url = os.getenv("REDIS_URL")
+    if url:
+        return url
+    host = os.getenv("REDIS_HOST", "localhost")
+    port = os.getenv("REDIS_PORT", "6379")
+    return f"redis://{host}:{port}/0"
+
+
 # Create Celery app with Redis as broker and backend
 app = Celery(
     "maxa-ds-agent",
-    broker=os.getenv("REDIS_URL", "redis://localhost:6379/0"),
-    backend=os.getenv("REDIS_URL", "redis://localhost:6379/0"),
+    broker=_redis_url(),
+    backend=_redis_url(),
 )
 
 # Configure Celery
@@ -52,8 +63,8 @@ def init_worker_storage(**kwargs):
 
 async def _init_storage_async():
     """Async initialization of storage backends."""
+    from src.storage.backends.dispatcher import get_object_store
     from src.storage.backends.postgres_document_store import PostgresDocumentStore
-    from src.storage.backends.object_store import MinIOObjectStore
     from src.storage.repositories.registry import RepositoryRegistry
 
     doc_store = PostgresDocumentStore(
@@ -65,12 +76,7 @@ async def _init_storage_async():
         schema=os.getenv("POSTGRES_SCHEMA", "app"),
     )
 
-    obj_store = MinIOObjectStore(
-        endpoint=os.getenv("MINIO_ENDPOINT"),
-        access_key=os.getenv("MINIO_ACCESS_KEY"),
-        secret_key=os.getenv("MINIO_SECRET_KEY"),
-        secure=False,
-    )
+    obj_store = get_object_store()
 
     registry = RepositoryRegistry(document_store=doc_store, object_store=obj_store)
     await registry.initialize()

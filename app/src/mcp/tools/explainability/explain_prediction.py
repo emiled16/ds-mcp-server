@@ -284,7 +284,7 @@ async def explain_prediction(
         plt.tight_layout()
 
         # Save plot
-        plot_url = await save_plot_to_minio(fig, "prediction_explanation")
+        _, plot_url = await save_plot_to_minio(fig, "prediction_explanation")
         plt.close(fig)
 
         # Build result

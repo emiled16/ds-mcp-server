@@ -1,14 +1,11 @@
-import os
-from typing import Optional
-
 import pandas as pd
-from snowflake.snowpark.context import get_active_session
 
-from src.data_science.ds_core.definitions.storage.snowflake import SnowflakeStorage
 from src.data_science.ds_core.snowflake import snowflake_session
+from src.data_science.snowflake_optional import require_snowflake
 
 
 def load_data_from_snowflake(query: str) -> pd.DataFrame:
+    require_snowflake()
     # Create connection and get session
     session = snowflake_session()
     result = session.sql(query).to_pandas()

@@ -1,9 +1,9 @@
-from typing import Any, Literal, Union
+from typing import Any, Literal
 
 import pandas as pd
 from pydantic import Field
-from snowflake.snowpark import DataFrame as SnowparkDataFrame
 
+from src.data_science.compat import SnowparkDataFrame
 from src.data_science.ds_core.atomic_functions.pandas.filter_rows import filter_rows as pandas_filter_rows
 from src.data_science.ds_core.definitions.orchestration.transformation import BaseParameter, BaseTransformation
 
@@ -32,7 +32,7 @@ class FilterRows(BaseTransformation):
         # default=FilterRowsParameters(),
     )
 
-    def _validate(self, df: Union[pd.DataFrame, SnowparkDataFrame]) -> "FilterRows":
+    def _validate(self, df: pd.DataFrame | SnowparkDataFrame) -> "FilterRows":
         if self.parameters.column not in df.columns:
             raise ValueError(f"Column {self.parameters.column} not found in dataframe")
 

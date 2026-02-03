@@ -1,9 +1,6 @@
-from typing import Literal, Union
+from typing import Literal
 
 import pandas as pd
-import sklearn.metrics as sklearn_metrics
-import snowflake.ml.modeling.metrics.regression as snowpark_metrics
-from snowflake import snowpark
 
 from src.data_science.regression.metrics.base import BaseMetric
 
@@ -14,8 +11,8 @@ class AbsoluteNetError(BaseMetric):
     def _evaluate_local(
         self,
         dataset: pd.DataFrame,
-        y_true_col_names: Union[str, list[str]],
-        y_pred_col_names: Union[str, list[str]],
+        y_true_col_names: str | list[str],
+        y_pred_col_names: str | list[str],
         direction_col: str = "direction",
         date_col: str = "date",
     ):
@@ -51,8 +48,8 @@ class AbsoluteNetError(BaseMetric):
 
     def _evaluate_snowflake(
         self,
-        dataset: snowpark.DataFrame,
-        y_true_col_names: Union[str, list[str]],
-        y_pred_col_names: Union[str, list[str]],
+        dataset: Any,
+        y_true_col_names: str | list[str],
+        y_pred_col_names: str | list[str],
     ):
         raise NotImplementedError

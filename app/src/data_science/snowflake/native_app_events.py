@@ -1,14 +1,13 @@
 from datetime import datetime, timezone
 from textwrap import dedent
 from types import TracebackType
-from typing import Any, Dict, List, Optional, Type
+from typing import Any
 from uuid import uuid4
 
 import pandas as pd
-import snowflake.snowpark.functions as sf
-from snowflake.snowpark import Session
-
 from src.data_science.snowflake.buffered_table import BufferedTable
+from src.data_science.snowflake_optional import Session, require_snowflake
+from src.data_science.snowflake_optional import snowpark_functions as sf
 
 # TODO(MAX-497): move OPERATIONS to CORE
 EVENT_TABLE_PATH = "OPERATIONS.MAXA_EVENTS"
@@ -34,6 +33,7 @@ class NativeAppEvents:
         )
 
     def __init__(self, session: Session, source: str, table_path: str = EVENT_TABLE_PATH) -> None:
+        require_snowflake()
         self._session = session
         self._source = source
         self._table_path = table_path
@@ -48,7 +48,7 @@ class NativeAppEvents:
             },
         )
 
-    def emit(self, payload: Dict[str, Any], uuid: Optional[str] = None) -> "NativeAppEvents":
+    def emit(self, payload: dict[str, Any], uuid: str | None = None) -> "NativeAppEvents":
         """Prepare an event to be sent."""
         self._buffered_table.add(
             {
@@ -66,10 +66,10 @@ class NativeAppEvents:
 
     def fetch_events(
         self,
-        source: Optional[str] = None,
-        delta_hours: Optional[int] = None,
-        columns: Optional[List[str]] = None,
-        with_payload: Optional[Dict[str, str]] = None,
+        source: str | None = None,
+        delta_hours: int | None = None,
+        columns: list[str] | None = None,
+        with_payload: dict[str, str] | None = None,
     ) -> pd.DataFrame:
         query = self._session.table(self._table_path).filter(
             sf.col("source") == (source if source else self._source),
@@ -88,15 +88,15 @@ class NativeAppEvents:
 
     def __exit__(
         self,
-        exc_type: Optional[Type[BaseException]] = None,
-        exc_val: Optional[BaseException] = None,
-        exc_tb: Optional[TracebackType] = None,
+        exc_type: type[BaseException] | None = None,
+        exc_val: BaseException | None = None,
+        exc_tb: TracebackType | None = None,
     ) -> None:
         self.publish()
 
 
 # Global instance to keep a single buffer of events
-__native_app_events: Optional[NativeAppEvents] = None
+__native_app_events: NativeAppEvents | None = None
 
 
 def setup_native_app_events(

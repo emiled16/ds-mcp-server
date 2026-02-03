@@ -2,7 +2,7 @@ from typing import Any, Literal, Union
 
 import pandas as pd
 from pydantic import Field
-from snowflake.snowpark import DataFrame as SnowparkDataFrame
+from src.data_science.compat import SnowparkDataFrame
 
 from src.data_science.ds_core.atomic_functions.pandas.concatenate import concatenate as pandas_concatenate
 from src.data_science.ds_core.atomic_functions.snowpark.concatenate import concatenate as snowpark_concatenate

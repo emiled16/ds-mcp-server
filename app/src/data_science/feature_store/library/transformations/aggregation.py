@@ -1,9 +1,9 @@
-from typing import Literal, Union
+from typing import Literal
 
 import pandas as pd
 from pydantic import Field
-from snowflake.snowpark import DataFrame as SnowparkDataFrame
 
+from src.data_science.compat import SnowparkDataFrame
 from src.data_science.ds_core.atomic_functions.pandas.aggregate import aggregate as pandas_aggregate
 from src.data_science.ds_core.atomic_functions.snowpark.aggregate import (
     aggregate as snowpark_aggregate,
@@ -19,7 +19,7 @@ class AggregationParameters(BaseParameter):
         description="Dimensions to aggregate by",
         default=[],
     )
-    aggregations: list[Union[tuple[str, str, str], tuple[str, str]]] = Field(
+    aggregations: list[tuple[str, str, str] | tuple[str, str]] = Field(
         description="""
         Aggregation to perform. List of tuples of strings (column_name, aggregation_function, new_column_name)
         Example: [("column_name", "sum", "new_column_name")]
@@ -49,7 +49,7 @@ class Aggregation(BaseTransformation):
 
     @staticmethod
     def _validate_aggregation(
-        aggregations: list[Union[tuple[str, str, str], tuple[str, str]]],
+        aggregations: list[tuple[str, str, str] | tuple[str, str]],
         columns: list[str],
     ) -> bool:
         condition1 = all(agg[0] in columns for agg in aggregations)
@@ -57,7 +57,7 @@ class Aggregation(BaseTransformation):
         condition2 = True
         return condition1 and condition2
 
-    def _validate(self, df: Union[pd.DataFrame, SnowparkDataFrame]) -> "Aggregation":
+    def _validate(self, df: pd.DataFrame | SnowparkDataFrame) -> "Aggregation":
         if not self._validate_dimensions(self.parameters.dimensions, columns=list(df.columns)):
             raise ValueError("Dimensions are not valid")
         if not self._validate_aggregation(self.parameters.aggregations, columns=list(df.columns)):

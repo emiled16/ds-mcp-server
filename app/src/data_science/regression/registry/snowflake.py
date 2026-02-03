@@ -1,12 +1,13 @@
 # see docs here: https://docs.snowflake.com/en/developer-guide/snowflake-ml/model-registry/model-management
 
-from typing import Optional
 
 import pandas as pd
-from snowflake.snowpark import Session
+
+from src.data_science.snowflake_optional import Session, require_snowflake
 
 
 def set_schema(session: Session, schema_name: str) -> None:
+    require_snowflake()
     session.sql(f"USE SCHEMA {schema_name}").collect()
 
 
@@ -14,8 +15,9 @@ def list_models(
     session: Session,
     model_name: str,
     database_name: str,
-    schema_name: Optional[str] = None,
+    schema_name: str | None = None,
 ) -> pd.DataFrame:
+    require_snowflake()
     schema_condition = f"AND schema_name = '{schema_name}'" if schema_name else ""
     query = f"""
     SELECT
@@ -44,7 +46,7 @@ def model_version_by_alias(
     alias: str,
     database_name: str,
     schema_name: str,
-) -> Optional[str]:
+) -> str | None:
     set_schema(session, schema_name)
     models = list_models(session, model_name, database_name, schema_name)
     result = models.query(f"VERSION_ALIASES == '{alias}'")["MODEL_VERSION_NAME"].values
@@ -59,7 +61,7 @@ def model_alias_by_version(
     version_name: str,
     database_name: str,
     schema_name: str,
-) -> Optional[str]:
+) -> str | None:
     set_schema(session, schema_name)
     models = list_models(session, model_name, database_name, schema_name)
     result = models.query(f"MODEL_VERSION_NAME == '{version_name}'")["VERSION_ALIASES"].values

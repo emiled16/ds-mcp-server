@@ -1,6 +1,5 @@
-from snowflake.snowpark.session import Session
-
 from src.data_science.snowflake.identifiers import db_identifier, identifier_parts, unquote_db_identifier
+from src.data_science.snowflake_optional import Session
 
 
 def table_exists(session: Session, table_path: str) -> bool:

@@ -1,9 +1,7 @@
 from collections.abc import Callable
 from typing import Literal
 
-from snowflake import snowpark
-from snowflake.ml.registry import Registry
-from snowflake.snowpark.types import DataType
+from src.data_science.snowflake_optional import DataType, Registry, snowpark
 
 
 def inference_sp(

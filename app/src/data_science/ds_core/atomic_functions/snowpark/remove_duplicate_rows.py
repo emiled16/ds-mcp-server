@@ -1,4 +1,4 @@
-from snowflake.snowpark import DataFrame as SnowparkDataFrame
+from src.data_science.snowflake_optional import SnowparkDataFrame, require_snowflake
 
 
 def remove_duplicate_rows(df: SnowparkDataFrame, columns: list[str]) -> SnowparkDataFrame:
@@ -10,4 +10,5 @@ def remove_duplicate_rows(df: SnowparkDataFrame, columns: list[str]) -> Snowpark
     Returns:
         The dataframe with duplicate rows removed.
     """
+    require_snowflake()
     return df.drop_duplicates(subset=columns)

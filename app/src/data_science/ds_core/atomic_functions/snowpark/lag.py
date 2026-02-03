@@ -1,6 +1,5 @@
-import snowflake.snowpark.functions as f
-from snowflake.snowpark import DataFrame as SnowparkDataFrame
-from snowflake.snowpark.window import Window
+from src.data_science.snowflake_optional import F as f
+from src.data_science.snowflake_optional import SnowparkDataFrame, Window, require_snowflake
 
 
 def lag(
@@ -20,6 +19,7 @@ def lag(
     Returns:
         The dataframe with the new lagged columns.
     """
+    require_snowflake()
     for column, lag_windows in lags.items():
         for lag_window in lag_windows:
             func = f.lag if lag_window > 0 else f.lead

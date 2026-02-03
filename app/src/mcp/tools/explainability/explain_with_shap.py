@@ -201,7 +201,7 @@ async def explain_with_shap(
         plt.tight_layout()
 
         # Save plot
-        plot_url = await save_plot_to_minio(fig, f"shap_{plot_type}")
+        _, plot_url = await save_plot_to_minio(fig, f"shap_{plot_type}")
         plt.close(fig)
 
         # Calculate feature importance from SHAP values

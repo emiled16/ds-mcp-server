@@ -1,10 +1,9 @@
-from typing import Literal, Union
+from typing import Literal
 
 import pandas as pd
-import snowflake.snowpark.functions as f
-from snowflake import snowpark
 
 from src.data_science.regression.metrics.base import BaseMetric
+from src.data_science.snowflake_optional import F as f
 
 
 class WeightedMeanAbsolutePercentageError(BaseMetric):
@@ -13,8 +12,8 @@ class WeightedMeanAbsolutePercentageError(BaseMetric):
     def _evaluate_local(
         self,
         dataset: pd.DataFrame,
-        y_true_col_names: Union[str, list[str]],
-        y_pred_col_names: Union[str, list[str]],
+        y_true_col_names: str | list[str],
+        y_pred_col_names: str | list[str],
     ) -> float:
         return (
             dataset.apply(lambda row: row[y_true_col_names] - row[y_pred_col_names], axis=1).abs().sum()
@@ -23,9 +22,9 @@ class WeightedMeanAbsolutePercentageError(BaseMetric):
 
     def _evaluate_snowflake(
         self,
-        dataset: snowpark.DataFrame,
-        y_true_col_names: Union[str, list[str]],
-        y_pred_col_names: Union[str, list[str]],
+        dataset: Any,
+        y_true_col_names: str | list[str],
+        y_pred_col_names: str | list[str],
     ) -> float:
         assert isinstance(y_true_col_names, str), "y_true_col_names must be a string"
         assert isinstance(y_pred_col_names, str), "y_pred_col_names must be a string"

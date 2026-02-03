@@ -151,7 +151,7 @@ async def plot_learning_curves(
         plt.tight_layout()
 
         # Save plot
-        object_key, plot_url = save_plot_to_minio(fig, f"learning_curves_{run_id[:8]}")
+        object_key, plot_url = await save_plot_to_minio(fig, f"learning_curves_{run_id[:8]}")
         close_figure(fig)
 
         # Generate summary

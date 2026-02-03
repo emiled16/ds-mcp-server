@@ -1,13 +1,13 @@
 import os
 import tempfile
+from collections.abc import Callable
 from pathlib import Path
-from typing import Any, Callable, Union
+from typing import Any
 
 import mlflow
 import pandas as pd
 from loguru import logger
 from mlflow.models.signature import ModelSignature
-from snowflake import snowpark
 
 from src.data_science.ds_core.definitions.splitters import Splitter
 from src.data_science.regression.configs.run import RunConfig
@@ -19,7 +19,7 @@ from src.data_science.regression.utils.mlflow import is_mlflow_server_running
 
 def log_run(func: Callable) -> Callable:
     def wrapper(
-        dataset: Union[pd.DataFrame, snowpark.DataFrame],
+        dataset: pd.DataFrame | Any,
         python_model: CustomModel,
         splitter: Splitter,
         scorer: Scorer,
@@ -32,7 +32,7 @@ def log_run(func: Callable) -> Callable:
         save_dataset: bool = False,
     ) -> tuple[Any, ModelSignature, dict[str, float], pd.DataFrame, str]:
         logger.debug(f"Trial {trial_number} - Run - Setup")
-        if isinstance(dataset, snowpark.DataFrame):
+        if getattr(dataset, "to_pandas", None) is not None and not isinstance(dataset, pd.DataFrame):
             dataset = dataset.to_pandas()
 
         tracking_uri = config.tracking_uri

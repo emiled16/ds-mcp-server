@@ -1,6 +1,7 @@
 from src.data_science.utils.setup import setup_environment
 
 setup_environment()
+import os
 import random
 
 import numpy as np
@@ -8,6 +9,7 @@ import yaml
 from dotenv import load_dotenv
 
 from src.data_science.database.client import DBClient
+from src.data_science.database.engine import get_engine
 from src.data_science.definitions.configs.experiment import ExperimentPipelineConfig
 from src.data_science.definitions.configs.feature_store import FeaturePipelineConfig
 from src.data_science.definitions.configs.hyperparameter_tuning import HyperparameterTuningPipelineConfig
@@ -20,10 +22,8 @@ from src.data_science.pipelines.hyperparameter_tuning import hyperparameter_tuni
 from src.data_science.pipelines.inference import inference
 from src.data_science.pipelines.model_selection import model_selection
 from src.data_science.pipelines.use_case import create_use_case
-from src.data_science.snowflake.session import create_snowpark_session
 from src.data_science.treasury_forecasting.constants import SEED
 from src.data_science.utils.parser import define_parser
-from src.data_science.utils.snowflake import snowpark_session
 
 random.seed(SEED)
 np.random.seed(SEED)
@@ -31,12 +31,12 @@ np.random.seed(SEED)
 
 def main() -> None:
     load_dotenv(".env", override=True)
-    create_snowpark_session()
     parser = define_parser()
     args = parser.parse_args()
 
-    session = snowpark_session()
-    db_client = DBClient(session)
+    engine = get_engine()
+    file_storage_path = os.getenv("FILE_STORAGE_PATH")
+    db_client = DBClient(engine, file_storage_path=file_storage_path)
 
     match args.command:
         case "use_case":

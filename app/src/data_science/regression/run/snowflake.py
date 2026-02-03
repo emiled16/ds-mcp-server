@@ -7,8 +7,7 @@ import numpy as np
 import pandas as pd
 from mlflow.models.signature import ModelSignature, Schema
 from mlflow.types.schema import ColSpec, DataType
-from snowflake import snowpark
-from snowflake.snowpark.context import get_active_session
+from src.data_science.snowflake_optional import get_active_session, require_snowflake, snowpark
 
 from src.data_science.regression.configs.run import RunConfig
 
@@ -24,10 +23,11 @@ mapping = {
 
 
 def launch_run_on_snowflake(
-    dataset: Union[pd.DataFrame, snowpark.DataFrame],
+    dataset: Union[pd.DataFrame, Any],
     config: RunConfig,
     sproc_name: str = "regression_experiment",
 ) -> tuple[Any, ModelSignature, dict[str, float], pd.DataFrame]:
+    require_snowflake()
     # save table to snowflake & convert the experiment config to a dict
     tmp_name = dataset_to_tmp_snowflake(dataset)
     database_name = get_active_session().get_current_database()
@@ -68,7 +68,8 @@ def launch_run_on_snowflake(
     return trained_model, signature, data.get("metrics", {}), predictions_df
 
 
-def dataset_to_tmp_snowflake(dataset: Union[pd.DataFrame, snowpark.DataFrame]) -> str:
+def dataset_to_tmp_snowflake(dataset: Union[pd.DataFrame, Any]) -> str:
+    require_snowflake()
     if isinstance(dataset, pd.DataFrame):
         tmp_name = f"tmp_dataset_{uuid.uuid4()}".replace("-", "_")
         dataset = get_active_session().create_dataframe(dataset)

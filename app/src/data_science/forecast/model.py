@@ -3,18 +3,18 @@ from typing import Any
 
 import joblib
 import pandas as pd
-from loguru import logger
 from mlflow.pyfunc.model import PythonModel
-from snowflake.snowpark import DataFrame as SnowparkDataFrame
+from sklearn.base import RegressorMixin
 
+from src.data_science.compat import SnowparkDataFrame
 from src.data_science.ds_core.definitions.orchestration.pipeline import Pipeline
-from src.data_science.regression.models.base import SnowflakeModelClassType
+from src.data_science.regression.models.base import SklearnRegressorWrapper
 
 
 class TimeSeriesForecastingModelWithFeatureSelection(PythonModel):
     def __init__(
         self,
-        model: SnowflakeModelClassType,
+        model: RegressorMixin | SklearnRegressorWrapper,
         selected_features: list[str],
         date_column: str,
         dimensions: list[str],
@@ -120,8 +120,6 @@ class TimeSeriesForecastingModelWithFeatureSelection(PythonModel):
 
     @staticmethod
     def select_columns(data: pd.DataFrame | SnowparkDataFrame, columns: list[str]) -> pd.DataFrame:
-        if isinstance(data, SnowparkDataFrame):
-            return data.select(columns).to_pandas()
         return data[columns]
 
     @staticmethod

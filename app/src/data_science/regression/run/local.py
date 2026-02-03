@@ -1,16 +1,16 @@
-from typing import Any, Union
+from typing import Any
 
 import numpy as np
 import pandas as pd
 from loguru import logger
 from mlflow.models.signature import ModelSignature, Schema
 from mlflow.types.schema import ColSpec, DataType
-from snowflake import snowpark
 
 from src.data_science.ds_core.definitions.splitters import Splitter
 from src.data_science.ds_core.definitions.splitters.enum import Split
 from src.data_science.regression.metrics import Scorer
 from src.data_science.regression.models.custom import CustomModel
+from src.data_science.snowflake_optional import SNOWFLAKE_AVAILABLE, SnowparkDataFrame
 
 mapping = {
     np.float64: DataType.double,
@@ -27,7 +27,7 @@ mapping = {
 
 
 def launch_run_locally(
-    dataset: Union[pd.DataFrame, snowpark.DataFrame],
+    dataset: pd.DataFrame | Any,
     python_model: CustomModel,
     splitter: Splitter,
     scorer: Scorer,
@@ -36,7 +36,11 @@ def launch_run_locally(
     input_cols: list[str],
     logger_context: str,
 ) -> tuple[Any, ModelSignature, dict[str, float], pd.DataFrame]:
-    dataset = dataset.to_pandas() if isinstance(dataset, snowpark.DataFrame) else dataset
+    dataset = (
+        dataset.to_pandas()
+        if (SNOWFLAKE_AVAILABLE and SnowparkDataFrame is not None and isinstance(dataset, SnowparkDataFrame))
+        else dataset
+    )
 
     all_predictions = []
     fold_scores = {}

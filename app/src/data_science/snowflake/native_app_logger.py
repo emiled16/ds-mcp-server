@@ -6,13 +6,11 @@ from datetime import datetime, timezone
 from enum import Enum
 from textwrap import dedent
 from types import TracebackType
-from typing import Any, Dict, Optional, Type
-
-from snowflake.snowpark import Session
-from snowflake.snowpark.functions import col, count, lit, lower
+from typing import Any
 
 from src.data_science.snowflake.buffered_table import BufferedTable
 from src.data_science.snowflake.session import create_snowpark_session
+from src.data_science.snowflake_optional import Session, col, count, lit, lower, require_snowflake
 
 SNOWFLAKE_LOGS_TABLE_NAME = "OPERATIONS.MAXA_LOGS"
 
@@ -41,8 +39,9 @@ class NativeAppLogger:
         logger_name: str,
         session: Session,
         table_path: str,
-        extra_fields: Dict[str, Any],
+        extra_fields: dict[str, Any],
     ):
+        require_snowflake()
         self._table_path = table_path
         self._app_name = app_name
         self._internal_logger = logging.getLogger(logger_name)
@@ -53,7 +52,7 @@ class NativeAppLogger:
         self._extra_fields = {"env": self._env, "version": self._version, **extra_fields}
         self._maxa_logger = None
         if _log_table_exists(session, table_path):
-            level = logging.DEBUG if self._env == "local" else logging.WARN
+            level = logging.DEBUG if self._env == "local" else logging.WARNING
             if env_log_level := os.getenv("APP_LOG_LEVEL"):
                 level = _validate_log_level(env_log_level)
             self._maxa_logger = SnowflakeTableLogger(session, table_path, logger_name, level)
@@ -109,9 +108,9 @@ class NativeAppLogger:
 
     def __exit__(
         self,
-        exc_type: Optional[Type[BaseException]] = None,
-        exc_val: Optional[BaseException] = None,
-        exc_tb: Optional[TracebackType] = None,
+        exc_type: type[BaseException] | None = None,
+        exc_val: BaseException | None = None,
+        exc_tb: TracebackType | None = None,
     ) -> None:
         if self._maxa_logger:
             self._maxa_logger.flush()
@@ -193,15 +192,15 @@ class SnowflakeTableLogger:
         self._buffered_table.flush()
 
 
-__native_app_logger: Optional[NativeAppLogger] = None
+__native_app_logger: NativeAppLogger | None = None
 
 
 def init_native_app_logger(
     app_name: str,
-    logger_name: Optional[str] = None,
-    session: Optional[Session] = None,
+    logger_name: str | None = None,
+    session: Session | None = None,
     table_name: str = SNOWFLAKE_LOGS_TABLE_NAME,
-    extra_fields: Dict[str, Any] = {},
+    extra_fields: dict[str, Any] = {},
 ) -> None:
     global __native_app_logger
     if __native_app_logger is None:
