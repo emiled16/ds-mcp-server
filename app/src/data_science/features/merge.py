@@ -1,8 +1,7 @@
-from typing import Literal, Union
+from typing import Literal
 
 import pandas as pd
 from pydantic import Field
-from src.data_science.compat import SnowparkDataFrame
 
 from src.data_science.ds_core.definitions.orchestration.io import BaseInput
 from src.data_science.ds_core.definitions.orchestration.transformation import BaseParameter, BaseTransformation
@@ -26,20 +25,14 @@ class Merge(BaseTransformation):
             BaseInput(
                 name="right",
                 description="Right dataframe to merge",
-                type=Union[pd.DataFrame, SnowparkDataFrame],
+                type=pd.DataFrame,
             ),
         ],
     )
     parameters: MergeParameters = MergeParameters()
 
-    def _fit_snowpark(self, left: SnowparkDataFrame, right: SnowparkDataFrame) -> "Merge":
-        raise NotImplementedError("Merge is not implemented for snowpark")
-
     def _fit_pandas(self, left: pd.DataFrame, right: pd.DataFrame) -> "Merge":
         return self
-
-    def _transform_snowpark(self, left: SnowparkDataFrame, right: SnowparkDataFrame) -> SnowparkDataFrame:
-        raise NotImplementedError("Merge is not implemented for snowpark")
 
     def _transform_pandas(self, left: pd.DataFrame, right: pd.DataFrame) -> pd.DataFrame:
         # find common columns between left and right

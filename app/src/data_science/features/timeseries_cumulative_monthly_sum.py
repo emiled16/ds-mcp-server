@@ -2,7 +2,6 @@ from typing import Literal
 
 import pandas as pd
 from pydantic import Field
-from src.data_science.compat import SnowparkDataFrame
 
 from src.data_science.ds_core.definitions.orchestration.transformation import BaseParameter, BaseTransformation
 
@@ -25,14 +24,8 @@ class CumulativeMonthlySum(BaseTransformation):
     """
     parameters: CumulativeMonthlySumParameters = CumulativeMonthlySumParameters()
 
-    def _fit_snowpark(self, df: SnowparkDataFrame) -> "CumulativeMonthlySum":
-        return self
-
     def _fit_pandas(self, df: pd.DataFrame) -> "CumulativeMonthlySum":
         return self
-
-    def _transform_snowpark(self, df: SnowparkDataFrame) -> SnowparkDataFrame:
-        raise NotImplementedError("CumulativeMonthlySum is not implemented for snowpark")
 
     def _transform_pandas(self, df: pd.DataFrame) -> pd.DataFrame:
         indexes = df.index.names

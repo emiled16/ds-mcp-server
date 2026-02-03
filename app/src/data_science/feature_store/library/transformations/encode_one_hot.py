@@ -4,7 +4,6 @@ import pandas as pd
 from pydantic import Field
 from sklearn.preprocessing import OneHotEncoder
 
-from src.data_science.compat import SnowparkDataFrame
 from src.data_science.ds_core.atomic_functions.pandas.encode_str import (
     encode_one_hot as pandas_encode_one_hot,
 )
@@ -31,9 +30,6 @@ class EncodeOneHot(BaseTransformation):
     parameters: EncodeOneHotParameters
     encoder: OneHotEncoder | None = Field(default=None)
 
-    def _fit_snowpark(self, df: SnowparkDataFrame) -> "EncodeOneHot":
-        pass
-
     def _fit_pandas(self, df: pd.DataFrame) -> "EncodeOneHot":
         if self.parameters.threshold is not None:
             _, encoder = pandas_encode_one_hot(df, self.parameters.column, threshold=self.parameters.threshold)
@@ -41,9 +37,6 @@ class EncodeOneHot(BaseTransformation):
             _, encoder = pandas_encode_one_hot(df, self.parameters.column)
         self.encoder = encoder
         return self
-
-    def _transform_snowpark(self, df: SnowparkDataFrame) -> SnowparkDataFrame:
-        pass
 
     def _transform_pandas(self, df: pd.DataFrame) -> pd.DataFrame:
         ## should the corresponding atomic function be different using fit and transform?

@@ -3,7 +3,6 @@ from typing import Literal
 import pandas as pd
 from pydantic import Field, model_validator
 
-from src.data_science.compat import SnowparkDataFrame
 from src.data_science.ds_core.definitions.orchestration.transformation import BaseParameter, BaseTransformation
 
 #   - [ ] distance since previous holiday
@@ -58,15 +57,9 @@ class AdvancedCalendar(BaseTransformation):
     """
     parameters: AdvancedCalendarParameters = AdvancedCalendarParameters()
 
-    def _fit_snowpark(self, df: SnowparkDataFrame) -> "AdvancedCalendar":
-        raise NotImplementedError("AdvancedCalendar is not implemented for snowpark")
-
     def _fit_pandas(self, df: pd.DataFrame) -> "AdvancedCalendar":
         if not self.parameters.all_columns:
             raise ValueError("all_columns is not set")
-
-    def _transform_snowpark(self, df: SnowparkDataFrame) -> SnowparkDataFrame:
-        raise NotImplementedError("AdvancedCalendar is not implemented for snowpark")
 
     def _transform_pandas(self, df: pd.DataFrame) -> pd.DataFrame:
         indexes = df.index.names

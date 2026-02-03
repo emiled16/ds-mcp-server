@@ -3,7 +3,6 @@ from typing import Literal
 import pandas as pd
 from pydantic import Field
 
-from src.data_science.compat import SnowparkDataFrame
 from src.data_science.ds_core.atomic_functions.pandas.flatten_dict import flatten_dict as pandas_flatten_dict
 from src.data_science.ds_core.definitions.orchestration.transformation import BaseParameter, BaseTransformation
 
@@ -34,15 +33,9 @@ class FlattenDict(BaseTransformation):
             raise ValueError(f"Column {self.parameters.column} not found in dataframe")
         return self
 
-    def _fit_snowpark(self, df: SnowparkDataFrame) -> "FlattenDict":
-        return self
-
     def _fit_pandas(self, df: pd.DataFrame) -> "FlattenDict":
         self._validate(df)
         return self
-
-    def _transform_snowpark(self, df: SnowparkDataFrame) -> SnowparkDataFrame:
-        pass
 
     def _transform_pandas(self, df: pd.DataFrame) -> pd.DataFrame:
         self._validate(df)

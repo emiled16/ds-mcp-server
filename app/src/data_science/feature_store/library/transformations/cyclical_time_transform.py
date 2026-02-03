@@ -3,7 +3,6 @@ from typing import Literal
 import pandas as pd
 from pydantic import Field
 
-from src.data_science.compat import SnowparkDataFrame
 from src.data_science.ds_core.atomic_functions.pandas.feature_cyclical_time_periods import (
     cyclical_time_transform as pandas_cyclical_time_transform,
 )
@@ -27,14 +26,8 @@ class CyclicalTimeTransform(BaseTransformation):
     """
     parameters: CyclicalTimeTransformParameters
 
-    def _fit_snowpark(self, df: SnowparkDataFrame) -> "CyclicalTimeTransform":
-        return self
-
     def _fit_pandas(self, df: pd.DataFrame) -> "CyclicalTimeTransform":
         return self
-
-    def _transform_snowpark(self, df: SnowparkDataFrame) -> SnowparkDataFrame:
-        pass
 
     def _transform_pandas(self, df: pd.DataFrame) -> pd.DataFrame:
         return pandas_cyclical_time_transform(df, self.parameters.datetime_column, self.parameters.granularity)

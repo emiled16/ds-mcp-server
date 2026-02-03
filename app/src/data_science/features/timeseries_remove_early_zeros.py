@@ -3,7 +3,6 @@ from typing import Literal
 import pandas as pd
 from pydantic import Field
 
-from src.data_science.compat import SnowparkDataFrame
 from src.data_science.ds_core.definitions.orchestration.transformation import BaseParameter, BaseTransformation
 
 
@@ -22,18 +21,12 @@ class TimeSeriesRemoveEarlyZeros(BaseTransformation):
     """
     parameters: TimeSeriesRemoveEarlyZerosParameters = TimeSeriesRemoveEarlyZerosParameters()
 
-    def _fit_snowpark(self, df: SnowparkDataFrame) -> "TimeSeriesRemoveEarlyZeros":
-        raise NotImplementedError("TimeSeriesRemoveEarlyZeros is not implemented for snowpark")
-
     def _fit_pandas(self, df: pd.DataFrame) -> "TimeSeriesRemoveEarlyZeros":
         if any(dim not in df.columns for dim in self.parameters.dimension_columns):
             raise ValueError("Dimension columns not found in dataframe")
         if self.parameters.datetime_column not in df.columns:
             raise ValueError("Datetime column not found in dataframe")
         return self
-
-    def _transform_snowpark(self, df: SnowparkDataFrame) -> SnowparkDataFrame:
-        raise NotImplementedError("TimeSeriesRemoveEarlyZeros is not implemented for snowpark")
 
     def _transform_pandas(self, df: pd.DataFrame) -> pd.DataFrame:
         df = df.sort_index()

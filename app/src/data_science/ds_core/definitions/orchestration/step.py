@@ -1,9 +1,6 @@
 from abc import ABC
-from typing import Literal, Optional, Union
 
-import pandas as pd
 from pydantic import BaseModel, ConfigDict, Field
-from src.data_science.compat import SnowparkDataFrame
 
 from src.data_science.ds_core.definitions.orchestration.io import BaseInput, BaseOutput, BaseParameter
 
@@ -11,9 +8,9 @@ from src.data_science.ds_core.definitions.orchestration.io import BaseInput, Bas
 class BaseStep(BaseModel, ABC):
     name: str = Field(description="Name of the step")
     description: str = Field(description="Description of the step")
-    inputs: Optional[list[BaseInput]] = Field(default=None)
-    outputs: Optional[list[BaseOutput]] = Field(default=None)
-    parameters: Optional[list[BaseParameter]] = Field(default=None)
+    inputs: list[BaseInput] | None = Field(default=None)
+    outputs: list[BaseOutput] | None = Field(default=None)
+    parameters: list[BaseParameter] | None = Field(default=None)
     model_config = ConfigDict(arbitrary_types_allowed=True, extra="forbid")
 
     def validate_inputs(self, **kwargs) -> bool:
@@ -28,15 +25,3 @@ class BaseStep(BaseModel, ABC):
         if errors:
             raise ValueError(errors)
         return True
-
-    @staticmethod
-    def _find_engine(
-        inputs: dict[str, Union[pd.DataFrame, SnowparkDataFrame]],
-    ) -> Literal["pandas", "snowpark"]:
-        all_pandas = all(isinstance(x, pd.DataFrame) for x in inputs.values())
-        all_snowpark = all(isinstance(x, SnowparkDataFrame) for x in inputs.values())
-        if all_pandas:
-            return "pandas"
-        if all_snowpark:
-            return "snowpark"
-        raise ValueError("All inputs must be of the same type")
