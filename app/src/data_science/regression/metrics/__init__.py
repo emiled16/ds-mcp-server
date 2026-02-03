@@ -1,4 +1,4 @@
-from typing import Annotated, Any, Union
+from typing import Annotated, Any
 
 import pandas as pd
 from pydantic import BaseModel, Field

@@ -1,10 +1,8 @@
 import json
-from typing import Any, Union
+from typing import Any
 
 import pandas as pd
 from pydantic import BaseModel, ConfigDict, Field
-
-from src.data_science.compat import SnowparkDataFrame
 
 
 class BaseVariable(BaseModel):
@@ -28,7 +26,7 @@ class BaseInput(BaseVariable):
     description: str = Field(default="Dataframe to transform")
     type: Any = Field(
         description="Type of the input",
-        default=Union[pd.DataFrame, SnowparkDataFrame],
+        default=pd.DataFrame,
     )
 
 
@@ -37,5 +35,5 @@ class BaseOutput(BaseVariable):
     description: str = Field(default="Output of the transformation")
     type: Any = Field(
         description="Type of the output",
-        default=Union[pd.DataFrame, SnowparkDataFrame],
+        default=pd.DataFrame,
     )

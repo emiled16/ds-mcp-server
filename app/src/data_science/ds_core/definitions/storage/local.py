@@ -5,9 +5,8 @@ from typing import Any, Literal
 import pandas as pd
 from loguru import logger
 from pydantic import model_validator
-from src.data_science.compat import SnowparkDataFrame
 
-from src.data_science.ds_core.definitions.storage.base import BaseStorage, DataFrame
+from src.data_science.ds_core.definitions.storage.base import BaseStorage
 
 
 class LocalStorage(BaseStorage):
@@ -24,16 +23,14 @@ class LocalStorage(BaseStorage):
             data["path"] = Path(data.get("folder"))
         return data
 
-    def save_dataset(self, dataset: DataFrame, table_name: str) -> None:
+    def save_dataset(self, dataset: pd.DataFrame, table_name: str) -> None:
         """
         - save dataset to parquet
         """
-        assert isinstance(dataset, (pd.DataFrame, SnowparkDataFrame)), "Dataset must be a pandas or snowpark dataframe"
-        df = dataset.to_pandas() if isinstance(dataset, SnowparkDataFrame) else dataset
-        df.to_parquet(f"{self.path}/{table_name}.parquet", index=False)
+        dataset.to_parquet(f"{self.path}/{table_name}.parquet", index=False)
         logger.info(f"Dataset {table_name} saved to {self.path}")
 
-    def load_dataset(self, table_name: str) -> DataFrame:
+    def load_dataset(self, table_name: str) -> pd.DataFrame:
         """
         - load dataset from parquet
         """

@@ -3,7 +3,6 @@ from typing import Literal
 import pandas as pd
 from pydantic import Field
 
-from src.data_science.compat import SnowparkDataFrame
 from src.data_science.ds_core.definitions.orchestration.transformation import BaseParameter, BaseTransformation
 
 
@@ -48,9 +47,6 @@ class CustomFilter(BaseTransformation):
     """
     parameters: CustomFilterParameters = CustomFilterParameters()
 
-    def _fit_snowpark(self, df: SnowparkDataFrame) -> "CustomFilter":
-        raise NotImplementedError("CustomFilter is not implemented for snowpark")
-
     def _fit_pandas(self, df: pd.DataFrame) -> "CustomFilter":
         columns = df.columns
         if "workday_of_month" not in columns and self.parameters.workdays_to_include:
@@ -68,9 +64,6 @@ class CustomFilter(BaseTransformation):
         if "is_workday" not in columns and self.parameters.only_keep_workdays:
             raise ValueError("is_workday not found")
         return self
-
-    def _transform_snowpark(self, df: SnowparkDataFrame) -> SnowparkDataFrame:
-        raise NotImplementedError("CustomFilter is not implemented for snowpark")
 
     def _transform_pandas(self, df: pd.DataFrame) -> pd.DataFrame:
         if self.parameters.keep_only_eom:

@@ -2,7 +2,6 @@ from typing import Literal
 
 import pandas as pd
 from pydantic import Field
-from src.data_science.compat import SnowparkDataFrame
 
 from src.data_science.definitions.configs.components.timeseries import Periodicity
 from src.data_science.ds_core.definitions.orchestration.transformation import BaseParameter, BaseTransformation
@@ -31,14 +30,8 @@ class AddMissingDates(BaseTransformation):
     """
     parameters: AddMissingDatesParameters = AddMissingDatesParameters()
 
-    def _fit_snowpark(self, df: SnowparkDataFrame) -> "AddMissingDates":
-        raise NotImplementedError("AddMissingDates is not implemented for snowpark")
-
     def _fit_pandas(self, df: pd.DataFrame) -> "AddMissingDates":
         return self
-
-    def _transform_snowpark(self, df: SnowparkDataFrame) -> SnowparkDataFrame:
-        raise NotImplementedError("AddMissingDates is not implemented for snowpark")
 
     def _transform_pandas(self, df: pd.DataFrame) -> pd.DataFrame:
         df_copy = df.copy(deep=True).reset_index(drop=True)

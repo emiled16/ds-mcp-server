@@ -5,7 +5,6 @@ import pandas as pd
 from loguru import logger
 from pydantic import Field
 
-from src.data_science.compat import SnowparkDataFrame
 from src.data_science.ds_core.definitions.orchestration.io import (
     BaseInput,
     BaseOutput,
@@ -91,43 +90,19 @@ class BaseTransformation(BaseStep, ABC):
 
     def fit(
         self,
-        **inputs: pd.DataFrame | SnowparkDataFrame,
+        **inputs: pd.DataFrame,
     ) -> "BaseTransformation":
         self.validate_inputs(**inputs)
-
-        engine = self._find_engine(inputs)
-        match engine:
-            case "pandas":
-                self._fit_pandas(**inputs)
-            case "snowpark":
-                self._fit_snowpark(**inputs)
-            case _:
-                raise ValueError("All inputs must be of the same type")
-
+        self._fit_pandas(**inputs)
         self.is_fitted = True
         return self
 
     def transform(
         self,
-        **inputs: pd.DataFrame | SnowparkDataFrame,
-    ) -> pd.DataFrame | SnowparkDataFrame:
+        **inputs: pd.DataFrame,
+    ) -> pd.DataFrame:
         self.validate_inputs(**inputs)
-
-        engine = self._find_engine(inputs)
-        logger.info("=" * 30)
-        logger.info(f"Running the transform: {self.name}")
-        logger.info("Shapes of inputs before transformation:")
-        for k, v in inputs.items():
-            logger.info(f"{k}: {v.shape}")
-            logger.info(f"Duplicates before {k}: {v.duplicated().sum()}")
-
-        match engine:
-            case "pandas":
-                result = self._transform_pandas(**inputs)
-            case "snowpark":
-                result = self._transform_snowpark(**inputs)
-            case _:
-                raise ValueError("All inputs must be of the same type")
+        result = self._transform_pandas(**inputs)
 
         logger.info("Shape of output after transformation:")
         logger.info(result.shape)
@@ -137,30 +112,20 @@ class BaseTransformation(BaseStep, ABC):
 
     def fit_transform(
         self,
-        **inputs: pd.DataFrame | SnowparkDataFrame,
-    ) -> pd.DataFrame | SnowparkDataFrame:
+        **inputs: pd.DataFrame,
+    ) -> pd.DataFrame:
         return self.fit(**inputs).transform(**inputs)
 
     @abstractmethod
-    def _fit_snowpark(
-        self,
-        **inputs: SnowparkDataFrame,
-    ) -> "BaseTransformation": ...
+    def _fit_snowpark(self, **inputs: Any) -> "BaseTransformation":
+        raise NotImplementedError("This transformation does not support Snowpark")
 
     @abstractmethod
-    def _fit_pandas(
-        self,
-        **inputs: pd.DataFrame,
-    ) -> "BaseTransformation": ...
+    def _fit_pandas(self, **inputs: pd.DataFrame) -> "BaseTransformation": ...
 
     @abstractmethod
-    def _transform_snowpark(
-        self,
-        **inputs: SnowparkDataFrame,
-    ) -> SnowparkDataFrame: ...
+    def _transform_snowpark(self, **inputs: Any) -> Any:
+        raise NotImplementedError("This transformation does not support Snowpark")
 
     @abstractmethod
-    def _transform_pandas(
-        self,
-        **inputs: pd.DataFrame,
-    ) -> pd.DataFrame: ...
+    def _transform_pandas(self, **inputs: pd.DataFrame) -> pd.DataFrame: ...

@@ -18,9 +18,7 @@ class Holdout(BaseSplitter):
         Split the dataset into training and testing sets.
         Returns a generator of indexes:
         - local : return a generator of tuples (train_idx, test_idx)
-        - snowpark : return a generator of .where() clauses
         """
-        assert isinstance(dataset, pd.DataFrame), "Dataset must be a local DataFrame"
         if self.shuffle:
             # shuffle local dataframe
             dataset = dataset.sample(frac=1).reset_index(drop=True)

@@ -4,7 +4,6 @@ import pandas as pd
 from pydantic import Field
 from sklearn.decomposition import PCA
 
-from src.data_science.compat import SnowparkDataFrame
 from src.data_science.ds_core.atomic_functions.pandas.feature_reduction import pca_reduction as pandas_pca_reduction
 from src.data_science.ds_core.definitions.orchestration.transformation import BaseParameter, BaseTransformation
 
@@ -23,16 +22,10 @@ class ReductionPCA(BaseTransformation):
     parameters: ReductionPCAParameters
     pca_transformer: PCA | None = None
 
-    def _fit_snowpark(self, df: SnowparkDataFrame) -> "ReductionPCA":
-        pass
-
     def _fit_pandas(self, df: pd.DataFrame) -> "ReductionPCA":
         _, pca_transformer = pandas_pca_reduction(df, self.parameters.columns, self.parameters.n_components)
         self.pca_transformer = pca_transformer
         return self
-
-    def _transform_snowpark(self, df: SnowparkDataFrame) -> SnowparkDataFrame:
-        pass
 
     def _transform_pandas(self, df: pd.DataFrame) -> pd.DataFrame:
         if self.pca_transformer is None:

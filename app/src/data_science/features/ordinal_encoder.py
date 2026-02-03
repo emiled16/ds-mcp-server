@@ -1,10 +1,8 @@
 from typing import Literal
 
-import numpy as np
 import pandas as pd
 from pydantic import Field
 from sklearn.preprocessing import OrdinalEncoder as SklearnOrdinalEncoder
-from src.data_science.compat import SnowparkDataFrame
 
 from src.data_science.ds_core.definitions.orchestration.transformation import BaseParameter, BaseTransformation
 
@@ -23,9 +21,6 @@ class OrdinalEncoder(BaseTransformation):
     parameters: OrdinalEncoderParameters = OrdinalEncoderParameters()
     encoder: SklearnOrdinalEncoder | None = Field(default=None, exclude=True)
 
-    def _fit_snowpark(self, df: SnowparkDataFrame) -> "OrdinalEncoder":
-        raise NotImplementedError("OrdinalEncoder is not implemented for snowpark")
-
     def _fit_pandas(self, df: pd.DataFrame) -> "OrdinalEncoder":
         if self.parameters.column not in df.columns:
             raise ValueError(f"Column {self.parameters.column} not found in dataframe")
@@ -34,9 +29,6 @@ class OrdinalEncoder(BaseTransformation):
 
         self.encoder.fit(df[self.parameters.column].unique().reshape(-1, 1))
         return self
-
-    def _transform_snowpark(self, df: SnowparkDataFrame) -> SnowparkDataFrame:
-        raise NotImplementedError("OrdinalEncoder is not implemented for snowpark")
 
     def _transform_pandas(self, df: pd.DataFrame) -> pd.DataFrame:
         if self.encoder is None:

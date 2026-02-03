@@ -4,14 +4,12 @@ import re
 import tempfile
 from datetime import datetime
 from pathlib import Path
-from typing import Optional, Union
 
 import networkx as nx
 import pandas as pd
 from loguru import logger
 from matplotlib import pyplot as plt
 from pydantic import BaseModel, Field, model_validator
-from src.data_science.compat import SnowparkDataFrame
 
 from src.data_science.ds_core.definitions.orchestration.step import BaseStep
 
@@ -41,7 +39,7 @@ class BasePipeline(BaseModel):
         description="Mapping of input nodes to output nodes",
         default_factory=dict,
     )
-    temp_dir: Optional[tempfile.TemporaryDirectory] = Field(
+    temp_dir: tempfile.TemporaryDirectory | None = Field(
         description="Temporary directory for the pipeline",
         default=None,
     )
@@ -110,7 +108,7 @@ class BasePipeline(BaseModel):
         """
         return len(self.steps)
 
-    def subset_graph(self, step_number: Optional[int] = None) -> None:
+    def subset_graph(self, step_number: int | None = None) -> None:
         """
         Subset the active graph to only include the specified nodes
         step_number is the number of steps to include in the active graph
@@ -126,7 +124,7 @@ class BasePipeline(BaseModel):
         else:
             self.active_graph = self.graph.subgraph(list(self.graph.nodes)[: step_number + number_of_input_nodes])
 
-    def add_step(self, step: BaseStep, name: str, edges: Optional[dict[str, str]] = None) -> None:
+    def add_step(self, step: BaseStep, name: str, edges: dict[str, str] | None = None) -> None:
         """
         Add a step to the pipeline with optional edge connections.
 
@@ -227,8 +225,8 @@ class BasePipeline(BaseModel):
         self,
         method: str,
         in_memory: bool = True,
-        **inputs: Union[pd.DataFrame, SnowparkDataFrame],
-    ) -> Union[pd.DataFrame, SnowparkDataFrame]:
+        **inputs: pd.DataFrame,
+    ) -> pd.DataFrame:
         """
         Execute the pipeline using the specified method (fit or transform).
 
@@ -250,7 +248,7 @@ class BasePipeline(BaseModel):
 
         metadata = {
             "method": method,
-            "inputs": [input for input in inputs.keys()],
+            "inputs": [input for input in inputs],
             "in_memory": in_memory,
             "timestamp": timestamp,
         }
@@ -292,8 +290,7 @@ class BasePipeline(BaseModel):
         # Return final output
         if in_memory:
             return results[node]  # Last node in topological sort is output
-        else:
-            return pd.read_parquet(temp_dir / f"{node}.parquet")
+        return pd.read_parquet(temp_dir / f"{node}.parquet")
 
     def save_pipeline(self, path: str) -> None:
         """
