@@ -1,11 +1,9 @@
-from typing import Literal, Union
+from typing import Literal
 
 import pandas as pd
 from pydantic import Field
-from src.data_science.compat import SnowparkDataFrame
 
 from src.data_science.ds_core.atomic_functions.pandas.truncate_date import truncate_date as truncate_date_pandas
-from src.data_science.ds_core.atomic_functions.snowpark.truncate_date import truncate_date as truncate_date_snowpark
 from src.data_science.ds_core.definitions.orchestration.transformation import BaseParameter, BaseTransformation
 
 
@@ -26,17 +24,11 @@ class TruncDate(BaseTransformation):
     description: str = "Truncate a dataframe's column to a given unit of time"
     parameters: TruncDateParameters
 
-    def _fit(self, _df: Union[pd.DataFrame, SnowparkDataFrame]) -> "TruncDate":
+    def _fit(self, _df: pd.DataFrame) -> "TruncDate":
         return self
-
-    def _fit_snowpark(self, df: SnowparkDataFrame) -> "TruncDate":
-        return self._fit(df)
 
     def _fit_pandas(self, df: pd.DataFrame) -> "TruncDate":
         return self._fit(df)
 
     def _transform_pandas(self, df: pd.DataFrame) -> pd.DataFrame:
         return truncate_date_pandas(df, self.parameters.column, self.parameters.unit)
-
-    def _transform_snowpark(self, df: SnowparkDataFrame) -> SnowparkDataFrame:
-        return truncate_date_snowpark(df, self.parameters.column, self.parameters.unit)

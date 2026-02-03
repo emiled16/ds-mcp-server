@@ -3,7 +3,6 @@ from typing import Literal
 import pandas as pd
 from pydantic import Field
 
-from src.data_science.compat import SnowparkDataFrame
 from src.data_science.ds_core.atomic_functions.pandas.sort import sort as pandas_sort
 from src.data_science.ds_core.definitions.orchestration.transformation import BaseParameter, BaseTransformation
 
@@ -19,14 +18,8 @@ class Sort(BaseTransformation):
     description: str = "Sort the dataframe by the columns specified in `columns` in ascending or descending order."
     parameters: SortParameters
 
-    def _fit_snowpark(self, df: SnowparkDataFrame) -> "Sort":
-        return self
-
     def _fit_pandas(self, df: pd.DataFrame) -> "Sort":
         return self
-
-    def _transform_snowpark(self, df: SnowparkDataFrame) -> SnowparkDataFrame:
-        pass
 
     def _transform_pandas(self, df: pd.DataFrame) -> pd.DataFrame:
         return pandas_sort(df, self.parameters.columns, self.parameters.ascending)

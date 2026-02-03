@@ -45,11 +45,3 @@ class AbsoluteNetError(BaseMetric):
             abs_net_error=lambda _d: (_d.net_actuals - _d.net_forecasts),
         )
         return df.abs_net_error.abs().mean()
-
-    def _evaluate_snowflake(
-        self,
-        dataset: Any,
-        y_true_col_names: str | list[str],
-        y_pred_col_names: str | list[str],
-    ):
-        raise NotImplementedError

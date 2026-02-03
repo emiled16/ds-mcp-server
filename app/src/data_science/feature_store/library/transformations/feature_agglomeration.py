@@ -4,7 +4,6 @@ import pandas as pd
 from pydantic import Field
 from sklearn.cluster import FeatureAgglomeration as SKLearnFeatureAgglomeration
 
-from src.data_science.compat import SnowparkDataFrame
 from src.data_science.ds_core.atomic_functions.pandas.feature_reduction import (
     feature_agglomeration as pandas_feature_agglomeration,
 )
@@ -26,9 +25,6 @@ class FeatureAgglomeration(BaseTransformation):
     parameters: FeatureAgglomerationParameters
     agglomeration_transformer: SKLearnFeatureAgglomeration | None = None
 
-    def _fit_snowpark(self, df: SnowparkDataFrame) -> "FeatureAgglomeration":
-        pass
-
     def _fit_pandas(self, df: pd.DataFrame) -> "FeatureAgglomeration":
         _, agglomeration_transformer = pandas_feature_agglomeration(
             df,
@@ -40,9 +36,6 @@ class FeatureAgglomeration(BaseTransformation):
             raise ValueError("FeatureAgglomeration has not been fitted")
         self.agglomeration_transformer = agglomeration_transformer
         return self
-
-    def _transform_snowpark(self, df: SnowparkDataFrame) -> SnowparkDataFrame:
-        pass
 
     def _transform_pandas(self, df: pd.DataFrame) -> pd.DataFrame:
         if self.agglomeration_transformer is None:

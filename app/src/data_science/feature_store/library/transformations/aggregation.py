@@ -3,11 +3,7 @@ from typing import Literal
 import pandas as pd
 from pydantic import Field
 
-from src.data_science.compat import SnowparkDataFrame
 from src.data_science.ds_core.atomic_functions.pandas.aggregate import aggregate as pandas_aggregate
-from src.data_science.ds_core.atomic_functions.snowpark.aggregate import (
-    aggregate as snowpark_aggregate,
-)
 from src.data_science.ds_core.definitions.orchestration.transformation import (
     BaseParameter,
     BaseTransformation,
@@ -57,28 +53,15 @@ class Aggregation(BaseTransformation):
         condition2 = True
         return condition1 and condition2
 
-    def _validate(self, df: pd.DataFrame | SnowparkDataFrame) -> "Aggregation":
+    def _validate(self, df: pd.DataFrame) -> "Aggregation":
         if not self._validate_dimensions(self.parameters.dimensions, columns=list(df.columns)):
             raise ValueError("Dimensions are not valid")
         if not self._validate_aggregation(self.parameters.aggregations, columns=list(df.columns)):
             raise ValueError("Aggregations are not valid")
         return self
 
-    def _fit_snowpark(self, df: SnowparkDataFrame) -> "Aggregation":
-        return self
-
     def _fit_pandas(self, df: pd.DataFrame) -> "Aggregation":
         return self
-
-    def _transform_snowpark(self, df: SnowparkDataFrame) -> SnowparkDataFrame:
-        self._validate(df)
-        if not self.is_fitted:
-            raise ValueError("Transformation is not fitted")
-        return snowpark_aggregate(
-            df=df,
-            dimensions=self.parameters.dimensions,
-            aggregations=self.parameters.aggregations,
-        )
 
     def _transform_pandas(self, df: pd.DataFrame) -> pd.DataFrame:
         self._validate(df)

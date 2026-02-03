@@ -3,7 +3,6 @@ from typing import Literal
 import pandas as pd
 from pydantic import Field
 
-from src.data_science.compat import SnowparkDataFrame
 from src.data_science.ds_core.atomic_functions.pandas.maths_transform import (
     polynomial_features as pandas_polynomial_features,
 )
@@ -23,14 +22,8 @@ class PolynomialFeatures(BaseTransformation):
     description: str = "Generate polynomial features"
     parameters: PolynomialFeaturesParameters
 
-    def _fit_snowpark(self, df: SnowparkDataFrame) -> "PolynomialFeatures":
-        pass
-
     def _fit_pandas(self, df: pd.DataFrame) -> "PolynomialFeatures":
         return self
-
-    def _transform_snowpark(self, df: SnowparkDataFrame) -> SnowparkDataFrame:
-        pass
 
     def _transform_pandas(self, df: pd.DataFrame) -> pd.DataFrame:
         return pandas_polynomial_features(

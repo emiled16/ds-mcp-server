@@ -3,7 +3,6 @@ from typing import Literal
 import pandas as pd
 from pydantic import Field
 
-from src.data_science.compat import SnowparkDataFrame
 from src.data_science.ds_core.definitions.orchestration.transformation import BaseParameter, BaseTransformation
 from src.data_science.snowflake_optional import F, require_snowflake
 from src.data_science.utils.snowflake import snowpark_session
@@ -36,14 +35,8 @@ class TimeSeriesSegmemtationFiltering(BaseTransformation):
     """
     parameters: TimeSeriesSegmentationFilteringParameters = TimeSeriesSegmentationFilteringParameters()
 
-    def _fit_snowpark(self, df: SnowparkDataFrame) -> "TimeSeriesSegmemtationFiltering":
-        raise NotImplementedError("TimeSeriesSegmemtationFiltering is not implemented for snowpark")
-
     def _fit_pandas(self, df: pd.DataFrame) -> "TimeSeriesSegmemtationFiltering":
         return self
-
-    def _transform_snowpark(self, df: SnowparkDataFrame) -> SnowparkDataFrame:
-        raise NotImplementedError("TimeSeriesSegmemtationFiltering is not implemented for snowpark")
 
     def _transform_pandas(self, df: pd.DataFrame) -> pd.DataFrame:
         require_snowflake()

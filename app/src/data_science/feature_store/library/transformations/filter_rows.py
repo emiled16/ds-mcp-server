@@ -3,7 +3,6 @@ from typing import Any, Literal
 import pandas as pd
 from pydantic import Field
 
-from src.data_science.compat import SnowparkDataFrame
 from src.data_science.ds_core.atomic_functions.pandas.filter_rows import filter_rows as pandas_filter_rows
 from src.data_science.ds_core.definitions.orchestration.transformation import BaseParameter, BaseTransformation
 
@@ -32,7 +31,7 @@ class FilterRows(BaseTransformation):
         # default=FilterRowsParameters(),
     )
 
-    def _validate(self, df: pd.DataFrame | SnowparkDataFrame) -> "FilterRows":
+    def _validate(self, df: pd.DataFrame) -> "FilterRows":
         if self.parameters.column not in df.columns:
             raise ValueError(f"Column {self.parameters.column} not found in dataframe")
 
@@ -42,14 +41,8 @@ class FilterRows(BaseTransformation):
 
         return self
 
-    def _fit_snowpark(self, df: SnowparkDataFrame) -> "FilterRows":
-        return self
-
     def _fit_pandas(self, df: pd.DataFrame) -> "FilterRows":
         return self
-
-    def _transform_snowpark(self, df: SnowparkDataFrame) -> SnowparkDataFrame:
-        pass
 
     def _transform_pandas(self, df: pd.DataFrame) -> pd.DataFrame:
         self._validate(df)

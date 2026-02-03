@@ -3,7 +3,6 @@ from typing import Literal
 import pandas as pd
 from pydantic import Field
 
-from src.data_science.compat import SnowparkDataFrame
 from src.data_science.ds_core.definitions.orchestration.transformation import BaseParameter, BaseTransformation
 
 
@@ -34,14 +33,8 @@ class PreviousMonthAggregation(BaseTransformation):
     """
     parameters: PreviousMonthAggregationParameters = PreviousMonthAggregationParameters()
 
-    def _fit_snowpark(self, df: SnowparkDataFrame) -> "PreviousMonthAggregation":
-        return self
-
     def _fit_pandas(self, df: pd.DataFrame) -> "PreviousMonthAggregation":
         return self
-
-    def _transform_snowpark(self, df: SnowparkDataFrame) -> SnowparkDataFrame:
-        raise NotImplementedError("PreviousMonthAggregation is not implemented for snowpark")
 
     def _transform_pandas(self, df: pd.DataFrame) -> pd.DataFrame:
         indexes = df.index.names

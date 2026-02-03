@@ -4,7 +4,6 @@ from typing import Literal
 import pandas as pd
 from pydantic import Field
 
-from src.data_science.compat import SnowparkDataFrame
 from src.data_science.ds_core.definitions.orchestration.transformation import BaseParameter, BaseTransformation
 
 
@@ -53,9 +52,6 @@ class FlattenList(BaseTransformation):
             raise ValueError(f"Column {self.parameters.column} not found in dataframe")
         return self
 
-    def _fit_snowpark(self, df: SnowparkDataFrame) -> "FlattenList":
-        return self
-
     def _fit_pandas(self, df: pd.DataFrame) -> "FlattenList":
         """Fit the transformer by learning the vocabulary from the input data.
 
@@ -79,9 +75,6 @@ class FlattenList(BaseTransformation):
         self.parameters.vocabulary = frequency_series[frequency_series >= self.parameters.threshold].index.tolist()
 
         return self
-
-    def _transform_snowpark(self, df: SnowparkDataFrame) -> SnowparkDataFrame:
-        pass
 
     def _transform_pandas(self, df: pd.DataFrame) -> pd.DataFrame:
         self._validate(df)

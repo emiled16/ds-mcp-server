@@ -3,7 +3,6 @@ from typing import Literal
 import pandas as pd
 from pydantic import Field
 
-from src.data_science.compat import SnowparkDataFrame
 from src.data_science.ds_core.definitions.orchestration.transformation import BaseParameter, BaseTransformation
 from src.data_science.utils.snowflake import snowpark_session
 
@@ -20,14 +19,8 @@ class TimeSeriesDimCalendar(BaseTransformation):
     description: str = "Add Calemdar Feaure from dim calendar"
     parameters: TimeSeriesDimCalendarParameters = TimeSeriesDimCalendarParameters()
 
-    def _fit_snowpark(self, df: SnowparkDataFrame) -> "TimeSeriesDimCalendarParameters":
-        raise NotImplementedError("TimeSeriesDimCalendar is not implemented for snowpark")
-
     def _fit_pandas(self, df: pd.DataFrame) -> "TimeSeriesDimCalendarParameters":
         return self
-
-    def _transform_snowpark(self, df: SnowparkDataFrame) -> SnowparkDataFrame:
-        raise NotImplementedError("TimeSeriesDimCalendar is not implemented for snowpark")
 
     def _transform_pandas(self, df: pd.DataFrame) -> pd.DataFrame:
         session = snowpark_session()

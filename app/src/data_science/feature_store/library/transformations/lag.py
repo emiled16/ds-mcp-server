@@ -3,9 +3,7 @@ from typing import Literal
 import pandas as pd
 from pydantic import Field
 
-from src.data_science.compat import SnowparkDataFrame
 from src.data_science.ds_core.atomic_functions.pandas.lag import lag as pandas_lag
-from src.data_science.ds_core.atomic_functions.snowpark.lag import lag as snowpark_lag
 from src.data_science.ds_core.definitions.orchestration.transformation import (
     BaseParameter,
     BaseTransformation,
@@ -81,11 +79,8 @@ class Lag(BaseTransformation):
         """.strip()
     parameters: LagParameters = Field(default=LagParameters())
 
-    def _fit(self, _df: pd.DataFrame | SnowparkDataFrame) -> "Lag":
+    def _fit(self, _df: pd.DataFrame) -> "Lag":
         return self
-
-    def _fit_snowpark(self, df: SnowparkDataFrame) -> "Lag":
-        return self._fit(df)
 
     def _fit_pandas(self, df: pd.DataFrame) -> "Lag":
         return self._fit(df)
@@ -103,11 +98,3 @@ class Lag(BaseTransformation):
             suffix=self.parameters.suffix,
         )
         return new_df.set_index(indexes)
-
-    def _transform_snowpark(self, df: SnowparkDataFrame) -> SnowparkDataFrame:
-        return snowpark_lag(
-            df=df,
-            lags=self.parameters.lags,
-            order_by=self.parameters.columns_to_order_by,
-            partition_by=self.parameters.columns_to_partition_by,
-        )

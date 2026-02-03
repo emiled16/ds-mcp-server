@@ -4,7 +4,6 @@ import pandas as pd
 from pydantic import Field
 from sklearn.preprocessing import MinMaxScaler, PowerTransformer, RobustScaler, StandardScaler
 
-from src.data_science.compat import SnowparkDataFrame
 from src.data_science.ds_core.atomic_functions.pandas.scaling_numerical import scale_data as pandas_scale_data
 from src.data_science.ds_core.definitions.orchestration.transformation import BaseParameter, BaseTransformation
 
@@ -24,16 +23,10 @@ class ScalingNumerical(BaseTransformation):
     parameters: ScalingNumericalParameters
     scaler: MinMaxScaler | StandardScaler | RobustScaler | PowerTransformer | None = Field(default=None)
 
-    def _fit_snowpark(self, df: SnowparkDataFrame) -> "ScalingNumerical":
-        pass
-
     def _fit_pandas(self, df: pd.DataFrame) -> "ScalingNumerical":
         _, scaler = pandas_scale_data(df, self.parameters.columns, self.parameters.method)
         self.scaler = scaler
         return self
-
-    def _transform_snowpark(self, df: SnowparkDataFrame) -> SnowparkDataFrame:
-        pass
 
     def _transform_pandas(self, df: pd.DataFrame) -> pd.DataFrame:
         if self.scaler is None:
