@@ -20,6 +20,7 @@ spec:
       containers:
         - name: flower
           image: "{{ .Values.images.flower.repository }}:{{ .Values.images.flower.tag }}"
+          command: ["celery", "-A", "src.workers.celery_app", "flower", "--port=5555"]
           ports:
             - containerPort: {{ .Values.flower.servicePort }}
           env:
